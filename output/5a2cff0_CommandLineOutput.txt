@@ -1,0 +1,142 @@
+(power-systems) PS C:\Users\warha\OneDrive\Documents\Dev\TM_UnitCommitment> python smoke_test_stage1.py
+Loading instance: C:\gitrepos\power-grid-lib\pglib-uc\rts_gmlc\2020-01-27.json
+Instance: 73 thermal generators, 48 time periods    
+
+Running all 48 periods in parallel  (n_workers=auto)
+
+Launching 48 periods across 4 worker(s)…
+  [  1/48]  t=2     best=92,367.20           gen=10     19.9s worker  (wall 23.3s)
+  [  2/48]  t=3     best=86,846.29           gen=13     22.3s worker  (wall 25.7s)
+  [  3/48]  t=1     best=88,640.60           gen=20     28.2s worker  (wall 31.5s)
+  [  4/48]  t=0     best=87,909.01           gen=26     30.8s worker  (wall 34.0s)
+  [  5/48]  t=4     best=94,510.76           gen=19     26.7s worker  (wall 49.9s)
+  [  6/48]  t=6     best=114,881.90          gen=29     33.7s worker  (wall 65.1s)
+  [  7/48]  t=5     best=102,297.64          gen=38     39.8s worker  (wall 65.6s)
+  [  8/48]  t=7     best=112,023.44          gen=50     46.3s worker  (wall 80.3s)
+  [  9/48]  t=8     best=109,569.21          gen=50     50.9s worker  (wall 100.8s)
+  [ 10/48]  t=9     best=110,755.98          gen=45     45.9s worker  (wall 111.0s)
+  [ 11/48]  t=11    best=111,819.86          gen=28     33.5s worker  (wall 113.8s)
+  [ 12/48]  t=10    best=111,455.78          gen=46     49.7s worker  (wall 115.3s)
+  [ 13/48]  t=13    best=113,621.85          gen=10     20.2s worker  (wall 131.2s)
+  [ 14/48]  t=14    best=110,614.91          gen=19     26.6s worker  (wall 140.4s)
+  [ 15/48]  t=15    best=108,638.39          gen=29     32.5s worker  (wall 147.7s)
+  [ 16/48]  t=16    best=113,613.24          gen=10     19.9s worker  (wall 151.2s)
+  [ 17/48]  t=12    best=109,811.67          gen=50     50.5s worker  (wall 151.3s)
+  [ 18/48]  t=18    best=128,418.92          gen=18     23.7s worker  (wall 171.4s)
+  [ 19/48]  t=19    best=126,546.00          gen=28     34.7s worker  (wall 185.9s)
+  [ 20/48]  t=17    best=122,406.19          gen=50     49.5s worker  (wall 189.9s)
+  [ 21/48]  t=20    best=117,828.84          gen=50     49.6s worker  (wall 200.9s)
+  [ 22/48]  t=22    best=102,560.62          gen=10     19.7s worker  (wall 205.7s)
+  [ 23/48]  t=21    best=110,769.67          gen=41     45.8s worker  (wall 217.2s)
+  [ 24/48]  t=23    best=91,952.33           gen=23     30.4s worker  (wall 220.2s)
+  [ 25/48]  t=25    best=90,700.00           gen=10     20.8s worker  (wall 226.4s)
+  [ 26/48]  t=24    best=86,622.31           gen=28     35.2s worker  (wall 236.1s)
+  [ 27/48]  t=26    best=85,892.40           gen=20     27.5s worker  (wall 244.7s)
+  [ 28/48]  t=27    best=88,858.39           gen=18     26.4s worker  (wall 246.6s)
+  [ 29/48]  t=28    best=92,821.60           gen=13     23.5s worker  (wall 249.9s)
+  [ 30/48]  t=29    best=102,572.09          gen=16     25.1s worker  (wall 261.2s)
+  [ 31/48]  t=31    best=108,806.13          gen=21     28.5s worker  (wall 275.1s)
+  [ 32/48]  t=32    best=111,286.25          gen=20     27.0s worker  (wall 276.9s)
+  [ 33/48]  t=33    best=112,461.83          gen=19     29.2s worker  (wall 290.4s)
+  [ 34/48]  t=30    best=110,216.79          gen=50     54.4s worker  (wall 299.2s)
+  [ 35/48]  t=35    best=113,455.79          gen=10     23.3s worker  (wall 300.2s)
+  [ 36/48]  t=36    best=112,651.79          gen=11     27.5s worker  (wall 317.9s)
+  [ 37/48]  t=38    best=108,645.49          gen=13     28.6s worker  (wall 328.8s)
+  [ 38/48]  t=37    best=109,144.56          gen=19     34.8s worker  (wall 333.9s)
+  [ 39/48]  t=34    best=107,130.27          gen=50     62.0s worker  (wall 337.2s)
+  [ 40/48]  t=40    best=108,106.44          gen=15     30.5s worker  (wall 359.2s)
+  [ 41/48]  t=39    best=103,626.65          gen=30     43.6s worker  (wall 361.5s)
+  [ 42/48]  t=42    best=128,116.22          gen=15     29.1s worker  (wall 366.2s)
+  [ 43/48]  t=41    best=119,292.74          gen=50     62.0s worker  (wall 395.9s)
+  [ 44/48]  t=43    best=118,746.55          gen=44     52.8s worker  (wall 412.0s)
+  [ 45/48]  t=45    best=104,694.15          gen=39     47.0s worker  (wall 413.3s)
+  [ 46/48]  t=44    best=112,951.86          gen=50     56.8s worker  (wall 418.3s)
+  [ 47/48]  t=46    best=100,239.02          gen=15     24.4s worker  (wall 420.3s)
+  [ 48/48]  t=47    best=92,952.95           gen=19     20.8s worker  (wall 432.8s)
+
+======================================================================
+  Stage 1 — All Periods Summary  (48 periods)
+======================================================================
+  Total wall time      : 433.1s
+  Feasible periods     : 48/48
+  ED solves (total)    : 3940   infeasible=0  (0.0%)
+  Best fitness range   : 85,892.40  –  128,418.92
+  Total cost (sum)     : 5,109,852.56
+
+  Period    Demand (MW)    Best Cost ($)       Committed     Gen     Wall (s)    Stop
+  --------  -------------  ------------------  ------------  ------  ----------  --------------------
+  0         3262.3                  87,909.01  41/73         26      30.77       stagnation=10 generations
+  1         3216.0                  88,640.60  33/73         20      28.19       stagnation=10 generations
+  2         3220.9                  92,367.20  42/73         10      19.89       stagnation=10 generations
+  3         3274.0                  86,846.29  38/73         13      22.27       stagnation=10 generations
+  4         3435.7                  94,510.76  39/73         19      26.66       stagnation=10 generations
+  5         3779.8                 102,297.64  39/73         38      39.84       stagnation=10 generations
+  6         4116.2                 114,881.90  47/73         29      33.66       stagnation=10 generations
+  7         4094.3                 112,023.44  46/73         50      46.27       max_generations=50
+  8         4076.6                 109,569.21  44/73         50      50.86       max_generations=50
+  9         4063.9                 110,755.98  48/73         45      45.91       stagnation=10 generations
+  10        4039.4                 111,455.78  46/73         46      49.69       stagnation=10 generations
+  11        4019.2                 111,819.86  44/73         28      33.47       stagnation=10 generations
+  12        3989.7                 109,811.67  49/73         50      50.52       max_generations=50
+  13        3952.9                 113,621.85  50/73         10      20.20       stagnation=10 generations
+  14        3929.6                 110,614.91  48/73         19      26.61       stagnation=10 generations
+  15        3882.4                 108,638.39  51/73         29      32.47       stagnation=10 generations
+  16        3953.8                 113,613.24  52/73         10      19.94       stagnation=10 generations
+  17        4360.7                 122,406.19  49/73         50      49.48       max_generations=50
+  18        4502.1                 128,418.92  58/73         18      23.66       stagnation=10 generations
+  19        4410.0                 126,546.00  58/73         28      34.73       stagnation=10 generations
+  20        4247.1                 117,828.84  45/73         50      49.56       max_generations=50
+  21        3956.0                 110,769.67  46/73         41      45.80       stagnation=10 generations
+  22        3635.4                 102,560.62  41/73         10      19.73       stagnation=10 generations
+  23        3395.4                  91,952.33  36/73         23      30.39       stagnation=10 generations
+  24        3238.1                  86,622.31  34/73         28      35.22       stagnation=10 generations
+  25        3172.2                  90,700.00  43/73         10      20.77       stagnation=10 generations
+  26        3165.5                  85,892.40  36/73         20      27.55       stagnation=10 generations
+  27        3204.1                  88,858.39  41/73         18      26.39       stagnation=10 generations
+  28        3355.0                  92,821.60  34/73         13      23.45       stagnation=10 generations
+  27        3204.1                  88,858.39  41/73         18      26.39       stagnation=10 generations
+  28        3355.0                  92,821.60  34/73         13      23.45       stagnation=10 generations
+  29        3653.9                 102,572.09  43/73         16      25.12       stagnation=10 generations
+  30        3938.9                 110,216.79  47/73         50      54.42       max_generations=50
+  31        3910.6                 108,806.13  47/73         21      28.48       stagnation=10 generations
+  32        3901.0                 111,286.25  51/73         20      27.03       stagnation=10 generations
+  29        3653.9                 102,572.09  43/73         16      25.12       stagnation=10 generations
+  30        3938.9                 110,216.79  47/73         50      54.42       max_generations=50
+  31        3910.6                 108,806.13  47/73         21      28.48       stagnation=10 generations
+  32        3901.0                 111,286.25  51/73         20      27.03       stagnation=10 generations
+  33        3929.8                 112,461.83  51/73         19      29.19       stagnation=10 generations
+  32        3901.0                 111,286.25  51/73         20      27.03       stagnation=10 generations
+  33        3929.8                 112,461.83  51/73         19      29.19       stagnation=10 generations
+  33        3929.8                 112,461.83  51/73         19      29.19       stagnation=10 generations
+  34        3946.3                 107,130.27  47/73         50      62.02       max_generations=50
+  35        3930.9                 113,455.79  51/73         10      23.27       stagnation=10 generations
+  36        3908.8                 112,651.79  54/73         11      27.47       stagnation=10 generations
+  37        3876.5                 109,144.56  45/73         19      34.75       stagnation=10 generations
+  38        3816.2                 108,645.49  47/73         13      28.59       stagnation=10 generations
+  39        3792.8                 103,626.65  45/73         30      43.59       stagnation=10 generations
+  40        3847.6                 108,106.44  47/73         15      30.45       stagnation=10 generations
+  41        4236.3                 119,292.74  54/73         50      62.00       max_generations=50
+  39        3792.8                 103,626.65  45/73         30      43.59       stagnation=10 generations
+  40        3847.6                 108,106.44  47/73         15      30.45       stagnation=10 generations
+  41        4236.3                 119,292.74  54/73         50      62.00       max_generations=50
+  40        3847.6                 108,106.44  47/73         15      30.45       stagnation=10 generations
+  41        4236.3                 119,292.74  54/73         50      62.00       max_generations=50
+  41        4236.3                 119,292.74  54/73         50      62.00       max_generations=50
+  42        4361.7                 128,116.22  60/73         15      29.06       stagnation=10 generations
+  43        4274.1                 118,746.55  46/73         44      52.78       stagnation=10 generations
+  44        4120.7                 112,951.86  45/73         50      56.80       max_generations=50
+  45        3850.3                 104,694.15  45/73         39      47.03       stagnation=10 generations
+  46        3554.8                 100,239.02  40/73         15      24.39       stagnation=10 generations
+  47        3343.5                  92,952.95  45/73         19      20.83       stagnation=10 generations
+======================================================================
+  43        4274.1                 118,746.55  46/73         44      52.78       stagnation=10 generations
+  44        4120.7                 112,951.86  45/73         50      56.80       max_generations=50
+  45        3850.3                 104,694.15  45/73         39      47.03       stagnation=10 generations
+  46        3554.8                 100,239.02  40/73         15      24.39       stagnation=10 generations
+  47        3343.5                  92,952.95  45/73         19      20.83       stagnation=10 generations
+======================================================================
+  45        3850.3                 104,694.15  45/73         39      47.03       stagnation=10 generations
+  46        3554.8                 100,239.02  40/73         15      24.39       stagnation=10 generations
+  47        3343.5                  92,952.95  45/73         19      20.83       stagnation=10 generations
+======================================================================
+======================================================================
