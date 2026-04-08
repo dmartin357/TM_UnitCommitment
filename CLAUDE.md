@@ -18,6 +18,7 @@ The algorithm consists of four stages. Each stage decomposes a distinct class of
 - Runs **independently for each time period** in the UC horizon
 - Handles **network constraints** (if any) and **min/max generation limits**
 - Runs **Economic Dispatch (ED)** as the fitness evaluation subproblem (no network), or **OPF** (AC/DC) if network constraints are active
+  - ED formulation is data-driven: the cost model used (piecewise linear, quadratic, etc.) is determined by the instance data. For the FERC benchmark, costs are piecewise linear (`piecewise_production` field in thermal generator data)
 - Produces a **diverse, bounded population of chromosomes** per time period
 - Uses **multiple CDF/PDF proxies** (sorted lists across dimensions) for initial generation
   - Cut group size distribution parameterized by renewable uncertainty (more uncertainty → smaller cuts → more units online → implicit reserves)
@@ -30,7 +31,7 @@ The algorithm consists of four stages. Each stage decomposes a distinct class of
 - Takes Stage 1 chromosome populations and builds a **directed graph connecting chromosomes between adjacent time periods**
 - Handles **ramping constraints** via a 4-level nested loop: time periods → chromosomes i → chromosomes i+1 → units
 - **Rectification logic**: if a ramp violation is within ~2x the unit ramp limit, attempts to adjust power levels rather than immediately discarding the edge
-- Tracks **net power adjustments** across all units; discards edge if total net adjustment exceeds predetermined limits
+- Tracks **net power adjustments** across all units; discards edge if total net adjustment exceeds a configurable limit (instance-specific parameter passed at runtime)
 - Detects and adds **startup/shutdown costs** to edge costs (attributed to the later time period)
 - **Edge cost = cost of target chromosome + startup/shutdown costs**
 - Goal: collapse N^M potential paths to a manageable subset by eliminating ramp-infeasible edges
@@ -101,26 +102,23 @@ The CBC run showed a late improvement at node 1,552 from $41.88M to $41.52M — 
 ## Directory Structure
 
 ```
-thesis-dev/                          # Primary thesis development directory
+TM_UnitCommitment/                   # Repo root
 ├── CLAUDE.md                        # This file
-├── data/                            # Local data (gitignored if large)
-├── eda/                             # Exploratory Data Analysis notebooks
-│   └── ferc_eda.ipynb               # EDA for FERC benchmark instance
-├── src/                             # Algorithm implementation
+├── PG_Lib_FERC_Instance/            # FERC benchmark instance (EDA + data)
+│   ├── Ferc_EDA_Interactive.ipynb   # Interactive EDA notebook
+│   ├── data/                        # Pre-extracted JSON instance data
+│   │   ├── demand.json
+│   │   ├── thermal_generators.json
+│   │   └── renewable_generators.json
+│   └── output/                      # EDA plots and exports
+├── src/                             # Algorithm implementation (to be created)
 │   ├── stage1_ga/                   # Stage 1: Genetic Algorithm
 │   ├── stage2_graph/                # Stage 2: Graph Builder
-│   ├── stage3_shortest_path/        # Stage 3: Shortest Path
-│   └── stage4_updown/               # Stage 4: Min Up/Down Time (TBD)
-├── tests/                           # Unit tests
-├── results/                         # Solver output, logs, result CSVs
-└── notebooks/                       # Scratch/analysis notebooks
-
-pglib-uc/                            # power-grid-lib repo clone (separate directory)
-├── uc_model.py                      # Pyomo UC model file
-└── data/                            # JSON instance files
+│   └── stage3_shortest_path/        # Stage 3: Shortest Path
+├── tests/                           # Unit tests (to be created)
+├── results/                         # Solver output, logs, result CSVs (to be created)
+└── notebooks/                       # Scratch/analysis notebooks (to be created)
 ```
-
-> Note: `thesis-dev/` and `pglib-uc/` are in separate directories. Use a config variable or environment variable to point at the pglib data path rather than hardcoding it.
 
 ---
 
