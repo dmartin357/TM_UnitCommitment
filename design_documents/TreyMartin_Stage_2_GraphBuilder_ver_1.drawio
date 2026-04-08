@@ -1,0 +1,294 @@
+<mxfile host="app.diagrams.net">
+  <diagram name="Page-1" id="zmGTJwtbcFcV0q9CVmSY">
+    <mxGraphModel grid="1" page="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" pageScale="1" pageWidth="1700" pageHeight="1100" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <mxCell id="WQTEmCCTB94sz5qFDfr0-63" edge="1" parent="1" source="WQTEmCCTB94sz5qFDfr0-59" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" target="WQTEmCCTB94sz5qFDfr0-60">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="WQTEmCCTB94sz5qFDfr0-59" parent="1" style="rounded=1;whiteSpace=wrap;html=1;" value="Initialize outer loop index, i, to the first time period index" vertex="1">
+          <mxGeometry height="60" width="120" x="560" y="120" as="geometry" />
+        </mxCell>
+        <mxCell id="WQTEmCCTB94sz5qFDfr0-62" edge="1" parent="1" source="WQTEmCCTB94sz5qFDfr0-60" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" target="WQTEmCCTB94sz5qFDfr0-61">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="WQTEmCCTB94sz5qFDfr0-129" connectable="0" parent="WQTEmCCTB94sz5qFDfr0-62" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];" value="False" vertex="1">
+          <mxGeometry relative="1" x="-0.264" y="5" as="geometry">
+            <mxPoint as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="WQTEmCCTB94sz5qFDfr0-133" edge="1" parent="1" source="WQTEmCCTB94sz5qFDfr0-60" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=0;exitY=0.5;exitDx=0;exitDy=0;entryX=1;entryY=0.5;entryDx=0;entryDy=0;" target="WQTEmCCTB94sz5qFDfr0-132">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="WQTEmCCTB94sz5qFDfr0-134" connectable="0" parent="WQTEmCCTB94sz5qFDfr0-133" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];" value="True" vertex="1">
+          <mxGeometry relative="1" x="-0.0249" y="-8" as="geometry">
+            <mxPoint as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="WQTEmCCTB94sz5qFDfr0-60" parent="1" style="rhombus;whiteSpace=wrap;html=1;" value="i &amp;gt; (MaxTimePeriods - 1)" vertex="1">
+          <mxGeometry height="90" width="190" x="525" y="230" as="geometry" />
+        </mxCell>
+        <mxCell id="WQTEmCCTB94sz5qFDfr0-70" edge="1" parent="1" source="WQTEmCCTB94sz5qFDfr0-61" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" target="WQTEmCCTB94sz5qFDfr0-69">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="WQTEmCCTB94sz5qFDfr0-61" parent="1" style="rounded=1;whiteSpace=wrap;html=1;" value="Initialize inner loop index, j, to the first chromosome index in time period i" vertex="1">
+          <mxGeometry height="70" width="160" x="540" y="370" as="geometry" />
+        </mxCell>
+        <mxCell id="WQTEmCCTB94sz5qFDfr0-73" edge="1" parent="1" source="WQTEmCCTB94sz5qFDfr0-64" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" target="WQTEmCCTB94sz5qFDfr0-72">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="WQTEmCCTB94sz5qFDfr0-64" parent="1" style="rounded=1;whiteSpace=wrap;html=1;" value="Initialize inner-inner loop index, k, to the first chromosome index in time period i+1" vertex="1">
+          <mxGeometry height="80" width="150" x="545" y="650" as="geometry" />
+        </mxCell>
+        <mxCell id="WQTEmCCTB94sz5qFDfr0-76" edge="1" parent="1" source="WQTEmCCTB94sz5qFDfr0-68" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" target="WQTEmCCTB94sz5qFDfr0-75">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="WQTEmCCTB94sz5qFDfr0-68" parent="1" style="rounded=1;whiteSpace=wrap;html=1;" value="Initialize inner-inner-inner loop index, l, to the first unit index" vertex="1">
+          <mxGeometry height="70" width="147.5" x="546.25" y="960" as="geometry" />
+        </mxCell>
+        <mxCell id="WQTEmCCTB94sz5qFDfr0-71" edge="1" parent="1" source="WQTEmCCTB94sz5qFDfr0-69" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" target="WQTEmCCTB94sz5qFDfr0-64">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="WQTEmCCTB94sz5qFDfr0-128" connectable="0" parent="WQTEmCCTB94sz5qFDfr0-71" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];" value="False" vertex="1">
+          <mxGeometry relative="1" x="-0.48" y="-1" as="geometry">
+            <mxPoint as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="WQTEmCCTB94sz5qFDfr0-125" edge="1" parent="1" source="WQTEmCCTB94sz5qFDfr0-69" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" target="WQTEmCCTB94sz5qFDfr0-124">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="WQTEmCCTB94sz5qFDfr0-127" connectable="0" parent="WQTEmCCTB94sz5qFDfr0-125" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];" value="True" vertex="1">
+          <mxGeometry relative="1" x="-0.1591" y="-5" as="geometry">
+            <mxPoint x="-1" as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="WQTEmCCTB94sz5qFDfr0-69" parent="1" style="rhombus;whiteSpace=wrap;html=1;" value="j &amp;gt; (NumberOfChromosomes[i] - 1)" vertex="1">
+          <mxGeometry height="110" width="235" x="502.5" y="480" as="geometry" />
+        </mxCell>
+        <mxCell id="WQTEmCCTB94sz5qFDfr0-74" edge="1" parent="1" source="WQTEmCCTB94sz5qFDfr0-72" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" target="WQTEmCCTB94sz5qFDfr0-68">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="WQTEmCCTB94sz5qFDfr0-119" connectable="0" parent="WQTEmCCTB94sz5qFDfr0-74" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];" value="False" vertex="1">
+          <mxGeometry relative="1" x="-0.36" y="3" as="geometry">
+            <mxPoint y="-1" as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="WQTEmCCTB94sz5qFDfr0-121" edge="1" parent="1" source="WQTEmCCTB94sz5qFDfr0-72" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=0;exitY=0.5;exitDx=0;exitDy=0;entryX=1;entryY=0.5;entryDx=0;entryDy=0;" target="WQTEmCCTB94sz5qFDfr0-120">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="WQTEmCCTB94sz5qFDfr0-122" connectable="0" parent="WQTEmCCTB94sz5qFDfr0-121" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];" value="True" vertex="1">
+          <mxGeometry relative="1" x="0.0063" y="2" as="geometry">
+            <mxPoint as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="WQTEmCCTB94sz5qFDfr0-72" parent="1" style="rhombus;whiteSpace=wrap;html=1;" value="k &amp;gt; (NumberOfChromosomes[i+1] - 1)" vertex="1">
+          <mxGeometry height="110" width="235" x="502.5" y="790" as="geometry" />
+        </mxCell>
+        <mxCell id="WQTEmCCTB94sz5qFDfr0-92" edge="1" parent="1" source="WQTEmCCTB94sz5qFDfr0-75" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" target="WQTEmCCTB94sz5qFDfr0-78">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="WQTEmCCTB94sz5qFDfr0-93" connectable="0" parent="WQTEmCCTB94sz5qFDfr0-92" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];" value="False" vertex="1">
+          <mxGeometry relative="1" x="-0.4667" y="-3" as="geometry">
+            <mxPoint x="23" as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="WQTEmCCTB94sz5qFDfr0-103" edge="1" parent="1" source="WQTEmCCTB94sz5qFDfr0-75" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" target="WQTEmCCTB94sz5qFDfr0-102">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="WQTEmCCTB94sz5qFDfr0-104" connectable="0" parent="WQTEmCCTB94sz5qFDfr0-103" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];" value="True" vertex="1">
+          <mxGeometry relative="1" x="-0.3169" y="-5" as="geometry">
+            <mxPoint x="-1" as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="WQTEmCCTB94sz5qFDfr0-75" parent="1" style="rhombus;whiteSpace=wrap;html=1;" value="l &amp;gt; (NumberOfUnits - 1)" vertex="1">
+          <mxGeometry height="110" width="235" x="502.5" y="1090" as="geometry" />
+        </mxCell>
+        <mxCell id="WQTEmCCTB94sz5qFDfr0-80" edge="1" parent="1" source="WQTEmCCTB94sz5qFDfr0-78" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" target="WQTEmCCTB94sz5qFDfr0-79">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="WQTEmCCTB94sz5qFDfr0-81" connectable="0" parent="WQTEmCCTB94sz5qFDfr0-80" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];" value="No" vertex="1">
+          <mxGeometry relative="1" x="-0.6378" y="-1" as="geometry">
+            <mxPoint as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="WQTEmCCTB94sz5qFDfr0-91" edge="1" parent="1" source="WQTEmCCTB94sz5qFDfr0-78" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=0;exitY=0.5;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" target="WQTEmCCTB94sz5qFDfr0-94">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="446" y="1330" />
+              <mxPoint x="446" y="2040" />
+              <mxPoint x="620" y="2040" />
+            </Array>
+            <mxPoint x="560" y="2120" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="WQTEmCCTB94sz5qFDfr0-78" parent="1" style="rhombus;whiteSpace=wrap;html=1;" value="Are power limits for unit l in time period i and i+1 within the units ramping limits?" vertex="1">
+          <mxGeometry height="140" width="307.5" x="466.25" y="1260" as="geometry" />
+        </mxCell>
+        <mxCell id="WQTEmCCTB94sz5qFDfr0-84" edge="1" parent="1" source="WQTEmCCTB94sz5qFDfr0-79" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=0;exitY=0.5;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" target="WQTEmCCTB94sz5qFDfr0-82">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="WQTEmCCTB94sz5qFDfr0-95" connectable="0" parent="WQTEmCCTB94sz5qFDfr0-84" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];" value="Yes" vertex="1">
+          <mxGeometry relative="1" x="-0.145" y="-3" as="geometry">
+            <mxPoint as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="WQTEmCCTB94sz5qFDfr0-111" edge="1" parent="1" source="WQTEmCCTB94sz5qFDfr0-79" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0.5;entryY=1;entryDx=0;entryDy=0;" target="WQTEmCCTB94sz5qFDfr0-106">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="WQTEmCCTB94sz5qFDfr0-112" connectable="0" parent="WQTEmCCTB94sz5qFDfr0-111" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];" value="No" vertex="1">
+          <mxGeometry relative="1" x="-0.7127" y="-1" as="geometry">
+            <mxPoint x="1" as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="WQTEmCCTB94sz5qFDfr0-79" parent="1" style="rhombus;whiteSpace=wrap;html=1;" value="Are power limits for unit l in time period i and i+1 within the predetermined threshold for attempted retification (e.g. 2 times the units ramping limits?" vertex="1">
+          <mxGeometry height="120" width="320" x="790" y="1450" as="geometry" />
+        </mxCell>
+        <mxCell id="WQTEmCCTB94sz5qFDfr0-85" edge="1" parent="1" source="WQTEmCCTB94sz5qFDfr0-82" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" target="WQTEmCCTB94sz5qFDfr0-83">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="WQTEmCCTB94sz5qFDfr0-82" parent="1" style="rounded=1;whiteSpace=wrap;html=1;" value="Attempt to adjust power levels for unit l in time period i and i+1 to fix ramping constraint&amp;nbsp;" vertex="1">
+          <mxGeometry height="70" width="140" x="670" y="1620" as="geometry" />
+        </mxCell>
+        <mxCell id="WQTEmCCTB94sz5qFDfr0-87" edge="1" parent="1" source="WQTEmCCTB94sz5qFDfr0-83" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" target="WQTEmCCTB94sz5qFDfr0-86">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="WQTEmCCTB94sz5qFDfr0-88" connectable="0" parent="WQTEmCCTB94sz5qFDfr0-87" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];" value="Yes" vertex="1">
+          <mxGeometry relative="1" x="-0.2229" y="-4" as="geometry">
+            <mxPoint as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="WQTEmCCTB94sz5qFDfr0-113" edge="1" parent="1" source="WQTEmCCTB94sz5qFDfr0-83" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0.5;entryY=1;entryDx=0;entryDy=0;" target="WQTEmCCTB94sz5qFDfr0-106">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="WQTEmCCTB94sz5qFDfr0-114" connectable="0" parent="WQTEmCCTB94sz5qFDfr0-113" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];" value="No" vertex="1">
+          <mxGeometry relative="1" x="-0.655" y="4" as="geometry">
+            <mxPoint x="1" as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="WQTEmCCTB94sz5qFDfr0-83" parent="1" style="rhombus;whiteSpace=wrap;html=1;" value="Ramping constraint fixed for unit l?" vertex="1">
+          <mxGeometry height="120" width="320" x="580" y="1770" as="geometry" />
+        </mxCell>
+        <mxCell id="WQTEmCCTB94sz5qFDfr0-90" edge="1" parent="1" source="WQTEmCCTB94sz5qFDfr0-86" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" target="WQTEmCCTB94sz5qFDfr0-94">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="740" y="2040" />
+              <mxPoint x="620" y="2040" />
+            </Array>
+            <mxPoint x="680" y="2120" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="WQTEmCCTB94sz5qFDfr0-86" parent="1" style="rounded=1;whiteSpace=wrap;html=1;" value="Record net difference in power caused by adjustments in time periods i and i+1" vertex="1">
+          <mxGeometry height="60" width="120" x="680" y="1960" as="geometry" />
+        </mxCell>
+        <mxCell id="WQTEmCCTB94sz5qFDfr0-97" edge="1" parent="1" source="WQTEmCCTB94sz5qFDfr0-94" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" target="WQTEmCCTB94sz5qFDfr0-96">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="WQTEmCCTB94sz5qFDfr0-100" connectable="0" parent="WQTEmCCTB94sz5qFDfr0-97" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];" value="Yes" vertex="1">
+          <mxGeometry relative="1" x="-0.1467" y="-5" as="geometry">
+            <mxPoint x="25" as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="WQTEmCCTB94sz5qFDfr0-94" parent="1" style="rhombus;whiteSpace=wrap;html=1;" value="Was unit l started up or shut down between periods i and i+1?" vertex="1">
+          <mxGeometry height="80" width="180" x="530" y="2080" as="geometry" />
+        </mxCell>
+        <mxCell id="WQTEmCCTB94sz5qFDfr0-99" edge="1" parent="1" source="WQTEmCCTB94sz5qFDfr0-96" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" target="WQTEmCCTB94sz5qFDfr0-98">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="WQTEmCCTB94sz5qFDfr0-96" parent="1" style="rounded=1;whiteSpace=wrap;html=1;" value="Record appropriate startup or shutdown costs towards the total cost of period i+1" vertex="1">
+          <mxGeometry height="60" width="120" x="560" y="2220" as="geometry" />
+        </mxCell>
+        <mxCell id="WQTEmCCTB94sz5qFDfr0-101" edge="1" parent="1" source="WQTEmCCTB94sz5qFDfr0-98" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" target="WQTEmCCTB94sz5qFDfr0-75">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="620" y="2420" />
+              <mxPoint x="270" y="2420" />
+              <mxPoint x="270" y="1070" />
+              <mxPoint x="620" y="1070" />
+            </Array>
+            <mxPoint x="340" y="1193.60009765625" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="WQTEmCCTB94sz5qFDfr0-98" parent="1" style="rounded=1;whiteSpace=wrap;html=1;" value="Increment index l" vertex="1">
+          <mxGeometry height="60" width="120" x="560" y="2340" as="geometry" />
+        </mxCell>
+        <mxCell id="WQTEmCCTB94sz5qFDfr0-107" edge="1" parent="1" source="WQTEmCCTB94sz5qFDfr0-102" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" target="WQTEmCCTB94sz5qFDfr0-106">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="WQTEmCCTB94sz5qFDfr0-110" connectable="0" parent="WQTEmCCTB94sz5qFDfr0-107" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];" value="No" vertex="1">
+          <mxGeometry relative="1" x="-0.3914" y="-11" as="geometry">
+            <mxPoint x="50" y="-11" as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="WQTEmCCTB94sz5qFDfr0-108" edge="1" parent="1" source="WQTEmCCTB94sz5qFDfr0-102" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=0.5;exitY=0;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" target="WQTEmCCTB94sz5qFDfr0-105">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="WQTEmCCTB94sz5qFDfr0-109" connectable="0" parent="WQTEmCCTB94sz5qFDfr0-108" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];" value="Yes" vertex="1">
+          <mxGeometry relative="1" x="0.0357" y="2" as="geometry">
+            <mxPoint x="1" as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="WQTEmCCTB94sz5qFDfr0-102" parent="1" style="rhombus;whiteSpace=wrap;html=1;" value="Are the total net power adjustments within predetermined limits for time period i and i+1?" vertex="1">
+          <mxGeometry height="115" width="230" x="835" y="1087.5" as="geometry" />
+        </mxCell>
+        <mxCell id="WQTEmCCTB94sz5qFDfr0-117" edge="1" parent="1" source="WQTEmCCTB94sz5qFDfr0-105" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" target="WQTEmCCTB94sz5qFDfr0-115">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="WQTEmCCTB94sz5qFDfr0-105" parent="1" style="rounded=1;whiteSpace=wrap;html=1;" value="Record the link between chromosome j in time period i and k in time period i+1 with the cost representing the cost of chromosome k" vertex="1">
+          <mxGeometry height="82.5" width="210" x="1130" y="1027.5" as="geometry" />
+        </mxCell>
+        <mxCell id="WQTEmCCTB94sz5qFDfr0-118" edge="1" parent="1" source="WQTEmCCTB94sz5qFDfr0-106" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0.5;entryY=1;entryDx=0;entryDy=0;" target="WQTEmCCTB94sz5qFDfr0-115">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="WQTEmCCTB94sz5qFDfr0-106" parent="1" style="rounded=1;whiteSpace=wrap;html=1;" value="Disregard link" vertex="1">
+          <mxGeometry height="60" width="220" x="1120" y="1202.5" as="geometry" />
+        </mxCell>
+        <mxCell id="WQTEmCCTB94sz5qFDfr0-116" edge="1" parent="1" source="WQTEmCCTB94sz5qFDfr0-115" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;entryX=0.5;entryY=0;entryDx=0;entryDy=0;exitX=1;exitY=0.5;exitDx=0;exitDy=0;" target="WQTEmCCTB94sz5qFDfr0-72">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="1680" y="1145" />
+              <mxPoint x="1680" y="760" />
+              <mxPoint x="620" y="760" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="WQTEmCCTB94sz5qFDfr0-115" parent="1" style="rounded=1;whiteSpace=wrap;html=1;" value="Increment index k" vertex="1">
+          <mxGeometry height="60" width="160" x="1440" y="1115" as="geometry" />
+        </mxCell>
+        <mxCell id="WQTEmCCTB94sz5qFDfr0-123" edge="1" parent="1" source="WQTEmCCTB94sz5qFDfr0-120" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=0;exitY=0.5;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" target="WQTEmCCTB94sz5qFDfr0-69">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="200" y="845" />
+              <mxPoint x="200" y="470" />
+              <mxPoint x="620" y="470" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="WQTEmCCTB94sz5qFDfr0-120" parent="1" style="rounded=1;whiteSpace=wrap;html=1;" value="Increment index j" vertex="1">
+          <mxGeometry height="60" width="120" x="240" y="815" as="geometry" />
+        </mxCell>
+        <mxCell id="WQTEmCCTB94sz5qFDfr0-126" edge="1" parent="1" source="WQTEmCCTB94sz5qFDfr0-124" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" target="WQTEmCCTB94sz5qFDfr0-60">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="1050" y="535" />
+              <mxPoint x="1050" y="200" />
+              <mxPoint x="620" y="200" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="WQTEmCCTB94sz5qFDfr0-124" parent="1" style="rounded=1;whiteSpace=wrap;html=1;" value="Increment index i" vertex="1">
+          <mxGeometry height="60" width="120" x="850" y="505" as="geometry" />
+        </mxCell>
+        <mxCell id="WQTEmCCTB94sz5qFDfr0-131" edge="1" parent="1" source="WQTEmCCTB94sz5qFDfr0-130" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" target="WQTEmCCTB94sz5qFDfr0-59">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="WQTEmCCTB94sz5qFDfr0-130" parent="1" style="ellipse;whiteSpace=wrap;html=1;aspect=fixed;" value="Start Here" vertex="1">
+          <mxGeometry height="80" width="80" x="580" y="-60" as="geometry" />
+        </mxCell>
+        <mxCell id="WQTEmCCTB94sz5qFDfr0-132" parent="1" style="ellipse;whiteSpace=wrap;html=1;aspect=fixed;" value="End Here" vertex="1">
+          <mxGeometry height="80" width="80" x="260" y="235" as="geometry" />
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>

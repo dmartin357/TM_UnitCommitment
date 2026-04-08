@@ -10,6 +10,27 @@ This is a **research script/notebook project**, not a production package. Priori
 
 ---
 
+## Current Implementation Status
+
+| Stage | Status | Notes |
+|---|---|---|
+| Stage 1 — GA (per time period) | **Complete** | Smoke-tested on FERC 2020-01-27 (48 periods, ~420s wall time) |
+| Stage 2 — Graph Builder | **Complete (stub)** | Rectification=2×, net adj tolerance=±5% demand, startup cost first-tier stub |
+| Stage 3 — Shortest Path | Not started | Depends on Stage 2 output |
+| Stage 4 — Min Up/Down Time | Not started | Depends on Stage 3 output |
+
+**Stage 1 implementation lives in** `src/stage1_ga/`. Key files:
+- `ga.py` — `run_stage1_ga()` single-period entry point
+- `parallel.py` — `run_all_periods()` ProcessPoolExecutor runner
+- `ed/piecewise_linear.py` — Pyomo piecewise-linear ED (fitness function)
+- `initial_population/generator.py` — iterative CDF-cut seed sampling
+- `population.py` — `BoundedPopulation` (sorted, bounded, SHA-256 dedup)
+- `chromosome.py` — binary commitment vector
+- `operators/crossover.py` — single-point crossover
+- `operators/mutation.py` — bit-flip mutation
+
+---
+
 ## Algorithm Architecture
 
 The algorithm consists of four stages. Each stage decomposes a distinct class of UC constraints:
@@ -111,10 +132,10 @@ TM_UnitCommitment/                   # Repo root
 │   │   ├── thermal_generators.json
 │   │   └── renewable_generators.json
 │   └── output/                      # EDA plots and exports
-├── src/                             # Algorithm implementation (to be created)
-│   ├── stage1_ga/                   # Stage 1: Genetic Algorithm
-│   ├── stage2_graph/                # Stage 2: Graph Builder
-│   └── stage3_shortest_path/        # Stage 3: Shortest Path
+├── src/
+│   ├── stage1_ga/                   # Stage 1: Genetic Algorithm (complete)
+│   ├── stage2_graph/                # Stage 2: Graph Builder (stub complete)
+│   └── stage3_shortest_path/        # Stage 3: Shortest Path (not started)
 ├── tests/                           # Unit tests (to be created)
 ├── results/                         # Solver output, logs, result CSVs (to be created)
 └── notebooks/                       # Scratch/analysis notebooks (to be created)
@@ -153,6 +174,15 @@ TM_UnitCommitment/                   # Repo root
 - **EDA first:** Replicate FERC EDA notebook for whichever small instance is selected
 - **Test incrementally:** Each stage should be testable independently before integration
 - **Commit frequently:** GitHub is used to sync state between VSCode development sessions and the Claude.ai chat project used for design discussions
+
+---
+
+## Design Documents
+
+Drawio flowchart diagrams for the overall algorithm and individual stages live in `design_documents/`. These cover the full 4-stage algorithm, not just one stage:
+- `TreyMartin_UC_Visual.drawio` — overall algorithm overview
+- `TreyMartin_Stage_1_GA_ver_1.drawio` — Stage 1 GA flowchart
+- `TreyMartin_Stage_2_GraphBuilder_ver_1.drawio` — Stage 2 graph builder flowchart
 
 ---
 

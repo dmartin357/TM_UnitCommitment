@@ -1,0 +1,424 @@
+<mxfile host="app.diagrams.net">
+  <diagram name="Page-1" id="hEYekudrL7_q4pN2VsKh">
+    <mxGraphModel grid="1" page="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" pageScale="1" pageWidth="3000" pageHeight="1100" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <mxCell id="pYykfk0FnVzc-JqeeE8c-2" edge="1" parent="1" source="pYykfk0FnVzc-JqeeE8c-3" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" target="pYykfk0FnVzc-JqeeE8c-8">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="pYykfk0FnVzc-JqeeE8c-3" parent="1" style="rounded=1;whiteSpace=wrap;html=1;" value="Select chromosomes for mating&amp;nbsp;" vertex="1">
+          <mxGeometry height="60" width="150" x="765" y="190" as="geometry" />
+        </mxCell>
+        <mxCell id="pYykfk0FnVzc-JqeeE8c-4" edge="1" parent="1" source="pYykfk0FnVzc-JqeeE8c-5" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" target="pYykfk0FnVzc-JqeeE8c-3">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="pYykfk0FnVzc-JqeeE8c-5" parent="1" style="rounded=1;whiteSpace=wrap;html=1;" value="Initialize best fitness value and worst fitness value from initial population for tracking purposes&amp;nbsp;" vertex="1">
+          <mxGeometry height="60" width="180" x="750" y="50" as="geometry" />
+        </mxCell>
+        <mxCell id="pYykfk0FnVzc-JqeeE8c-6" parent="1" style="text;html=1;whiteSpace=wrap;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;rounded=0;" value="NOTE: Probability for selection during the first stage will based on the fitness value for the current time period" vertex="1">
+          <mxGeometry height="65" width="200" x="990" y="185" as="geometry" />
+        </mxCell>
+        <mxCell id="pYykfk0FnVzc-JqeeE8c-7" edge="1" parent="1" source="pYykfk0FnVzc-JqeeE8c-8" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" target="pYykfk0FnVzc-JqeeE8c-12">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="pYykfk0FnVzc-JqeeE8c-8" parent="1" style="rounded=1;whiteSpace=wrap;html=1;" value="Perform cuts to combine chromosomes" vertex="1">
+          <mxGeometry height="70" width="150" x="765" y="330" as="geometry" />
+        </mxCell>
+        <mxCell id="pYykfk0FnVzc-JqeeE8c-9" edge="1" parent="1" source="pYykfk0FnVzc-JqeeE8c-10" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" target="pYykfk0FnVzc-JqeeE8c-52">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="pYykfk0FnVzc-JqeeE8c-10" parent="1" style="rounded=1;whiteSpace=wrap;html=1;" value="Calculate fitness value of newly produced chromosome" vertex="1">
+          <mxGeometry height="60" width="150" x="765" y="870" as="geometry" />
+        </mxCell>
+        <mxCell id="pYykfk0FnVzc-JqeeE8c-11" edge="1" parent="1" source="pYykfk0FnVzc-JqeeE8c-12" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" target="pYykfk0FnVzc-JqeeE8c-17">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="pYykfk0FnVzc-JqeeE8c-12" parent="1" style="rounded=1;whiteSpace=wrap;html=1;" value="Calculate hash value of new chromosome and check if this chrromosome has already been evaluated" vertex="1">
+          <mxGeometry height="70" width="160" x="760" y="470" as="geometry" />
+        </mxCell>
+        <mxCell id="pYykfk0FnVzc-JqeeE8c-13" edge="1" parent="1" source="pYykfk0FnVzc-JqeeE8c-17" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" target="pYykfk0FnVzc-JqeeE8c-47">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="pYykfk0FnVzc-JqeeE8c-14" connectable="0" parent="pYykfk0FnVzc-JqeeE8c-13" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];" value="No" vertex="1">
+          <mxGeometry relative="1" x="-0.08" as="geometry">
+            <mxPoint as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="pYykfk0FnVzc-JqeeE8c-15" edge="1" parent="1" source="pYykfk0FnVzc-JqeeE8c-17" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" target="pYykfk0FnVzc-JqeeE8c-3">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="1480" y="640" />
+              <mxPoint x="1480" y="150" />
+              <mxPoint x="840" y="150" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="pYykfk0FnVzc-JqeeE8c-16" connectable="0" parent="pYykfk0FnVzc-JqeeE8c-15" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];" value="Yes" vertex="1">
+          <mxGeometry relative="1" x="-0.8171" y="3" as="geometry">
+            <mxPoint x="-111" y="3" as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="pYykfk0FnVzc-JqeeE8c-17" parent="1" style="rhombus;whiteSpace=wrap;html=1;" value="Chromosome already been evaluated?" vertex="1">
+          <mxGeometry height="100" width="230" x="725" y="590" as="geometry" />
+        </mxCell>
+        <mxCell id="pYykfk0FnVzc-JqeeE8c-18" edge="1" parent="1" source="pYykfk0FnVzc-JqeeE8c-22" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=0;exitY=0.5;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" target="pYykfk0FnVzc-JqeeE8c-24">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="pYykfk0FnVzc-JqeeE8c-19" connectable="0" parent="pYykfk0FnVzc-JqeeE8c-18" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];" value="Yes" vertex="1">
+          <mxGeometry relative="1" x="-0.0909" as="geometry">
+            <mxPoint as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="pYykfk0FnVzc-JqeeE8c-20" edge="1" parent="1" source="pYykfk0FnVzc-JqeeE8c-22" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" target="pYykfk0FnVzc-JqeeE8c-28">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="pYykfk0FnVzc-JqeeE8c-21" connectable="0" parent="pYykfk0FnVzc-JqeeE8c-20" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];" value="No" vertex="1">
+          <mxGeometry relative="1" x="0.3391" as="geometry">
+            <mxPoint as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="pYykfk0FnVzc-JqeeE8c-22" parent="1" style="rhombus;whiteSpace=wrap;html=1;" value="Fitness value better than the current best for the time period?" vertex="1">
+          <mxGeometry height="180" width="360" x="665" y="1350" as="geometry" />
+        </mxCell>
+        <mxCell id="pYykfk0FnVzc-JqeeE8c-23" edge="1" parent="1" source="pYykfk0FnVzc-JqeeE8c-24" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" target="pYykfk0FnVzc-JqeeE8c-30">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="635" y="1790" />
+              <mxPoint x="845" y="1790" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="pYykfk0FnVzc-JqeeE8c-24" parent="1" style="rounded=1;whiteSpace=wrap;html=1;" value="Update best fitness value for current time period" vertex="1">
+          <mxGeometry height="100" width="190" x="540" y="1630" as="geometry" />
+        </mxCell>
+        <mxCell id="pYykfk0FnVzc-JqeeE8c-25" edge="1" parent="1" source="pYykfk0FnVzc-JqeeE8c-28" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" target="pYykfk0FnVzc-JqeeE8c-30">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="1115" y="1790" />
+              <mxPoint x="845" y="1790" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="pYykfk0FnVzc-JqeeE8c-26" connectable="0" parent="pYykfk0FnVzc-JqeeE8c-25" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];" value="No" vertex="1">
+          <mxGeometry relative="1" x="-0.4629" y="9" as="geometry">
+            <mxPoint as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="pYykfk0FnVzc-JqeeE8c-27" edge="1" parent="1" source="pYykfk0FnVzc-JqeeE8c-28" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" target="pYykfk0FnVzc-JqeeE8c-40">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="pYykfk0FnVzc-JqeeE8c-28" parent="1" style="rhombus;whiteSpace=wrap;html=1;" value="Fitness value worse than the current worst valuefor the time period?" vertex="1">
+          <mxGeometry height="180" width="360" x="935" y="1580" as="geometry" />
+        </mxCell>
+        <mxCell id="pYykfk0FnVzc-JqeeE8c-29" edge="1" parent="1" source="pYykfk0FnVzc-JqeeE8c-30" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" target="pYykfk0FnVzc-JqeeE8c-35">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="pYykfk0FnVzc-JqeeE8c-30" parent="1" style="rounded=1;whiteSpace=wrap;html=1;" value="Add new chromosome to current list of viable solutions" vertex="1">
+          <mxGeometry height="100" width="170" x="760" y="1840" as="geometry" />
+        </mxCell>
+        <mxCell id="pYykfk0FnVzc-JqeeE8c-31" edge="1" parent="1" source="pYykfk0FnVzc-JqeeE8c-35" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" target="pYykfk0FnVzc-JqeeE8c-44">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="pYykfk0FnVzc-JqeeE8c-32" connectable="0" parent="pYykfk0FnVzc-JqeeE8c-31" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];" value="Yes" vertex="1">
+          <mxGeometry relative="1" x="-0.4057" y="-2" as="geometry">
+            <mxPoint y="1" as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="pYykfk0FnVzc-JqeeE8c-33" edge="1" parent="1" source="pYykfk0FnVzc-JqeeE8c-35" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" target="pYykfk0FnVzc-JqeeE8c-3">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="410" y="2085" />
+              <mxPoint x="410" y="150" />
+              <mxPoint x="840" y="150" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="pYykfk0FnVzc-JqeeE8c-34" connectable="0" parent="pYykfk0FnVzc-JqeeE8c-33" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];" value="No" vertex="1">
+          <mxGeometry relative="1" x="-0.8599" y="-2" as="geometry">
+            <mxPoint x="140" y="2" as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="pYykfk0FnVzc-JqeeE8c-35" parent="1" style="rhombus;whiteSpace=wrap;html=1;" value="Discard worst valued chromosome?" vertex="1">
+          <mxGeometry height="110" width="260" x="715" y="2030" as="geometry" />
+        </mxCell>
+        <mxCell id="pYykfk0FnVzc-JqeeE8c-36" edge="1" parent="1" source="pYykfk0FnVzc-JqeeE8c-40" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" target="pYykfk0FnVzc-JqeeE8c-3">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="1480" y="1885" />
+              <mxPoint x="1480" y="150" />
+              <mxPoint x="840" y="150" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="pYykfk0FnVzc-JqeeE8c-37" connectable="0" parent="pYykfk0FnVzc-JqeeE8c-36" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];" value="Yes" vertex="1">
+          <mxGeometry relative="1" x="-0.7732" y="-4" as="geometry">
+            <mxPoint y="1" as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="pYykfk0FnVzc-JqeeE8c-38" edge="1" parent="1" source="pYykfk0FnVzc-JqeeE8c-40" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" target="pYykfk0FnVzc-JqeeE8c-42">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="pYykfk0FnVzc-JqeeE8c-39" connectable="0" parent="pYykfk0FnVzc-JqeeE8c-38" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];" value="No" vertex="1">
+          <mxGeometry relative="1" x="-0.1657" y="-4" as="geometry">
+            <mxPoint y="-1" as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="pYykfk0FnVzc-JqeeE8c-40" parent="1" style="rhombus;whiteSpace=wrap;html=1;" value="Discard new chromosome?" vertex="1">
+          <mxGeometry height="110" width="260" x="1205" y="1830" as="geometry" />
+        </mxCell>
+        <mxCell id="pYykfk0FnVzc-JqeeE8c-41" edge="1" parent="1" source="pYykfk0FnVzc-JqeeE8c-42" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" target="pYykfk0FnVzc-JqeeE8c-45">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="pYykfk0FnVzc-JqeeE8c-42" parent="1" style="rounded=1;whiteSpace=wrap;html=1;" value="Update worst fitness value for the current time period" vertex="1">
+          <mxGeometry height="80" width="200" x="1235" y="2010" as="geometry" />
+        </mxCell>
+        <mxCell id="pYykfk0FnVzc-JqeeE8c-43" edge="1" parent="1" source="pYykfk0FnVzc-JqeeE8c-44" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" target="pYykfk0FnVzc-JqeeE8c-3">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="840" y="2290" />
+              <mxPoint x="840" y="2360" />
+              <mxPoint x="410" y="2360" />
+              <mxPoint x="410" y="150" />
+              <mxPoint x="840" y="150" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="pYykfk0FnVzc-JqeeE8c-44" parent="1" style="rounded=1;whiteSpace=wrap;html=1;" value="Determine new worst fitness value and associated chromosome for the current time period" vertex="1">
+          <mxGeometry height="80" width="170" x="760" y="2210" as="geometry" />
+        </mxCell>
+        <mxCell id="pYykfk0FnVzc-JqeeE8c-45" parent="1" style="rounded=1;whiteSpace=wrap;html=1;" value="Add new chromosome to current list of viable solutions" vertex="1">
+          <mxGeometry height="100" width="170" x="1250" y="2160" as="geometry" />
+        </mxCell>
+        <mxCell id="pYykfk0FnVzc-JqeeE8c-46" edge="1" parent="1" source="pYykfk0FnVzc-JqeeE8c-47" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" target="pYykfk0FnVzc-JqeeE8c-10">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="pYykfk0FnVzc-JqeeE8c-47" parent="1" style="rounded=1;whiteSpace=wrap;html=1;" value="Calculate hash and store value of proposed chromosome to prevent re-checking in the future" vertex="1">
+          <mxGeometry height="60" width="150" x="765" y="760" as="geometry" />
+        </mxCell>
+        <mxCell id="pYykfk0FnVzc-JqeeE8c-48" edge="1" parent="1" source="pYykfk0FnVzc-JqeeE8c-52" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=0;exitY=0.5;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" target="pYykfk0FnVzc-JqeeE8c-22">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="720" y="1020" />
+              <mxPoint x="720" y="1210" />
+              <mxPoint x="845" y="1210" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="pYykfk0FnVzc-JqeeE8c-49" connectable="0" parent="pYykfk0FnVzc-JqeeE8c-48" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];" value="No" vertex="1">
+          <mxGeometry relative="1" x="-0.4088" y="4" as="geometry">
+            <mxPoint x="1" y="-80" as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="pYykfk0FnVzc-JqeeE8c-50" edge="1" parent="1" source="pYykfk0FnVzc-JqeeE8c-52" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" target="pYykfk0FnVzc-JqeeE8c-57">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="pYykfk0FnVzc-JqeeE8c-51" connectable="0" parent="pYykfk0FnVzc-JqeeE8c-50" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];" value="Yes" vertex="1">
+          <mxGeometry relative="1" x="0.3436" y="-7" as="geometry">
+            <mxPoint y="-1" as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="pYykfk0FnVzc-JqeeE8c-52" parent="1" style="rhombus;whiteSpace=wrap;html=1;" value="Using network constraints?" vertex="1">
+          <mxGeometry height="80" width="200" x="740" y="980" as="geometry" />
+        </mxCell>
+        <mxCell id="pYykfk0FnVzc-JqeeE8c-53" edge="1" parent="1" source="pYykfk0FnVzc-JqeeE8c-57" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" target="pYykfk0FnVzc-JqeeE8c-3">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="1480" y="1150" />
+              <mxPoint x="1480" y="150" />
+              <mxPoint x="840" y="150" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="pYykfk0FnVzc-JqeeE8c-54" connectable="0" parent="pYykfk0FnVzc-JqeeE8c-53" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];" value="Yes" vertex="1">
+          <mxGeometry relative="1" x="-0.8726" y="4" as="geometry">
+            <mxPoint x="-88" y="-6" as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="pYykfk0FnVzc-JqeeE8c-55" edge="1" parent="1" source="pYykfk0FnVzc-JqeeE8c-57" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" target="pYykfk0FnVzc-JqeeE8c-22">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="1045" y="1210" />
+              <mxPoint x="845" y="1210" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="pYykfk0FnVzc-JqeeE8c-56" connectable="0" parent="pYykfk0FnVzc-JqeeE8c-55" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];" value="No" vertex="1">
+          <mxGeometry relative="1" x="-0.6722" y="10" as="geometry">
+            <mxPoint x="1" as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="pYykfk0FnVzc-JqeeE8c-57" parent="1" style="rhombus;whiteSpace=wrap;html=1;" value="Any network constraint violations?" vertex="1">
+          <mxGeometry height="80" width="210" x="940" y="1110" as="geometry" />
+        </mxCell>
+        <mxCell id="pYykfk0FnVzc-JqeeE8c-58" parent="1" style="rhombus;whiteSpace=wrap;html=1;" value="Stopping conditions reached?" vertex="1">
+          <mxGeometry height="80" width="210" x="735" y="2420" as="geometry" />
+        </mxCell>
+        <mxCell id="pYykfk0FnVzc-JqeeE8c-59" parent="1" style="ellipse;whiteSpace=wrap;html=1;aspect=fixed;" value="End Here" vertex="1">
+          <mxGeometry height="80" width="80" x="1355" y="2420" as="geometry" />
+        </mxCell>
+        <mxCell id="eUd5tbv5nbSdO2CJc1Ma-1" edge="1" parent="1" source="eUd5tbv5nbSdO2CJc1Ma-2" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" target="eUd5tbv5nbSdO2CJc1Ma-4">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="eUd5tbv5nbSdO2CJc1Ma-2" parent="1" style="rounded=1;whiteSpace=wrap;html=1;" value="Generate random number from cut group size distribution" vertex="1">
+          <mxGeometry height="80" width="200" x="-200" y="-1435" as="geometry" />
+        </mxCell>
+        <mxCell id="eUd5tbv5nbSdO2CJc1Ma-3" edge="1" parent="1" source="eUd5tbv5nbSdO2CJc1Ma-4" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" target="eUd5tbv5nbSdO2CJc1Ma-6">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="eUd5tbv5nbSdO2CJc1Ma-4" parent="1" style="rounded=1;whiteSpace=wrap;html=1;" value="Generate ranom number from cut group location distribution" vertex="1">
+          <mxGeometry height="80" width="200" x="-200" y="-1315" as="geometry" />
+        </mxCell>
+        <mxCell id="eUd5tbv5nbSdO2CJc1Ma-5" edge="1" parent="1" source="eUd5tbv5nbSdO2CJc1Ma-6" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" target="eUd5tbv5nbSdO2CJc1Ma-11">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="eUd5tbv5nbSdO2CJc1Ma-6" parent="1" style="rounded=1;whiteSpace=wrap;html=1;" value="Process the cut by reforming the CDF or PDF and checking against the stopping criteria" vertex="1">
+          <mxGeometry height="110" width="200" x="-200" y="-1185" as="geometry" />
+        </mxCell>
+        <mxCell id="eUd5tbv5nbSdO2CJc1Ma-7" edge="1" parent="1" source="eUd5tbv5nbSdO2CJc1Ma-11" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=0;exitY=0.5;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" target="eUd5tbv5nbSdO2CJc1Ma-2">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="-270" y="-970" />
+              <mxPoint x="-270" y="-1495" />
+              <mxPoint x="-100" y="-1495" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="eUd5tbv5nbSdO2CJc1Ma-8" connectable="0" parent="eUd5tbv5nbSdO2CJc1Ma-7" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];" value="No" vertex="1">
+          <mxGeometry relative="1" x="0.0121" y="1" as="geometry">
+            <mxPoint as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="eUd5tbv5nbSdO2CJc1Ma-9" edge="1" parent="1" source="eUd5tbv5nbSdO2CJc1Ma-11" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" target="eUd5tbv5nbSdO2CJc1Ma-12">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="eUd5tbv5nbSdO2CJc1Ma-10" connectable="0" parent="eUd5tbv5nbSdO2CJc1Ma-9" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];" value="Yes" vertex="1">
+          <mxGeometry relative="1" x="-0.08" as="geometry">
+            <mxPoint as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="eUd5tbv5nbSdO2CJc1Ma-11" parent="1" style="rhombus;whiteSpace=wrap;html=1;" value="Is the stopping criteria met?" vertex="1">
+          <mxGeometry height="130" width="300" x="-250" y="-1035" as="geometry" />
+        </mxCell>
+        <mxCell id="eUd5tbv5nbSdO2CJc1Ma-12" parent="1" style="rounded=1;whiteSpace=wrap;html=1;" value="Run Economic Dispatch (no network)/OPF (AC or DC with network)" vertex="1">
+          <mxGeometry height="110" width="190" x="-195" y="-855" as="geometry" />
+        </mxCell>
+        <mxCell id="eUd5tbv5nbSdO2CJc1Ma-13" edge="1" parent="1" source="eUd5tbv5nbSdO2CJc1Ma-17" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" target="eUd5tbv5nbSdO2CJc1Ma-21">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="eUd5tbv5nbSdO2CJc1Ma-14" connectable="0" parent="eUd5tbv5nbSdO2CJc1Ma-13" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];" value="No" vertex="1">
+          <mxGeometry relative="1" x="-0.05" y="2" as="geometry">
+            <mxPoint as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="eUd5tbv5nbSdO2CJc1Ma-15" edge="1" parent="1" source="eUd5tbv5nbSdO2CJc1Ma-17" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" target="eUd5tbv5nbSdO2CJc1Ma-27">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="eUd5tbv5nbSdO2CJc1Ma-16" connectable="0" parent="eUd5tbv5nbSdO2CJc1Ma-15" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];" value="Yes" vertex="1">
+          <mxGeometry relative="1" y="4" as="geometry">
+            <mxPoint as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="eUd5tbv5nbSdO2CJc1Ma-17" parent="1" style="rhombus;whiteSpace=wrap;html=1;" value="Did sub problem produce a solution?&amp;nbsp;" vertex="1">
+          <mxGeometry height="110" width="300" x="-250" y="-685" as="geometry" />
+        </mxCell>
+        <mxCell id="eUd5tbv5nbSdO2CJc1Ma-18" edge="1" parent="1" source="eUd5tbv5nbSdO2CJc1Ma-25" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=0.5;exitY=0;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" target="eUd5tbv5nbSdO2CJc1Ma-2">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="540" y="-1495" />
+              <mxPoint x="-100" y="-1495" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="eUd5tbv5nbSdO2CJc1Ma-19" connectable="0" parent="eUd5tbv5nbSdO2CJc1Ma-18" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];" value="No" vertex="1">
+          <mxGeometry relative="1" x="-0.5889" y="3" as="geometry">
+            <mxPoint as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="eUd5tbv5nbSdO2CJc1Ma-20" edge="1" parent="1" source="eUd5tbv5nbSdO2CJc1Ma-21" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" target="eUd5tbv5nbSdO2CJc1Ma-25">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="eUd5tbv5nbSdO2CJc1Ma-21" parent="1" style="rounded=1;whiteSpace=wrap;html=1;" value="Discard Candidate" vertex="1">
+          <mxGeometry height="60" width="120" x="130" y="-660" as="geometry" />
+        </mxCell>
+        <mxCell id="eUd5tbv5nbSdO2CJc1Ma-22" edge="1" parent="1" source="eUd5tbv5nbSdO2CJc1Ma-12" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" target="eUd5tbv5nbSdO2CJc1Ma-17">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="-90" y="-705" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="eUd5tbv5nbSdO2CJc1Ma-23" edge="1" parent="1" source="eUd5tbv5nbSdO2CJc1Ma-25" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" target="eUd5tbv5nbSdO2CJc1Ma-37">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="eUd5tbv5nbSdO2CJc1Ma-24" connectable="0" parent="eUd5tbv5nbSdO2CJc1Ma-23" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];" value="Yes" vertex="1">
+          <mxGeometry relative="1" x="-0.152" y="-1" as="geometry">
+            <mxPoint as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="eUd5tbv5nbSdO2CJc1Ma-25" parent="1" style="rhombus;whiteSpace=wrap;html=1;" value="Target number of candidate solutions&amp;nbsp;&lt;div&gt;reached, or&amp;nbsp;&lt;span style=&quot;background-color: transparent; color: light-dark(rgb(0, 0, 0), rgb(255, 255, 255));&quot;&gt;timeout/attempt limit occurred?&lt;/span&gt;&lt;/div&gt;" vertex="1">
+          <mxGeometry height="90" width="320" x="380" y="-675" as="geometry" />
+        </mxCell>
+        <mxCell id="eUd5tbv5nbSdO2CJc1Ma-26" edge="1" parent="1" source="eUd5tbv5nbSdO2CJc1Ma-27" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0.5;entryY=1;entryDx=0;entryDy=0;" target="eUd5tbv5nbSdO2CJc1Ma-25">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="eUd5tbv5nbSdO2CJc1Ma-27" parent="1" style="rounded=1;whiteSpace=wrap;html=1;" value="Form chromosome and store subproblem solution value (chromosome fitness value)" vertex="1">
+          <mxGeometry height="110" width="180" x="-190" y="-505" as="geometry" />
+        </mxCell>
+        <mxCell id="eUd5tbv5nbSdO2CJc1Ma-28" edge="1" parent="1" source="eUd5tbv5nbSdO2CJc1Ma-29" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" target="eUd5tbv5nbSdO2CJc1Ma-2">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="-100" y="-1555" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="eUd5tbv5nbSdO2CJc1Ma-29" parent="1" style="rounded=1;whiteSpace=wrap;html=1;" value="Calculate system capability limits to compare CDF/PDF&#39;s to." vertex="1">
+          <mxGeometry height="60" width="200" x="-200" y="-1635" as="geometry" />
+        </mxCell>
+        <mxCell id="eUd5tbv5nbSdO2CJc1Ma-30" edge="1" parent="1" source="eUd5tbv5nbSdO2CJc1Ma-31" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" target="eUd5tbv5nbSdO2CJc1Ma-29">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="eUd5tbv5nbSdO2CJc1Ma-31" parent="1" style="ellipse;whiteSpace=wrap;html=1;aspect=fixed;" value="Start Here" vertex="1">
+          <mxGeometry height="80" width="80" x="-140" y="-1775" as="geometry" />
+        </mxCell>
+        <mxCell id="eUd5tbv5nbSdO2CJc1Ma-32" edge="1" parent="1" source="eUd5tbv5nbSdO2CJc1Ma-33" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=0;exitY=0.5;exitDx=0;exitDy=0;entryX=1;entryY=0.5;entryDx=0;entryDy=0;dashed=1;" target="eUd5tbv5nbSdO2CJc1Ma-2">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="eUd5tbv5nbSdO2CJc1Ma-33" parent="1" style="text;html=1;whiteSpace=wrap;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;rounded=0;" value="NOTE: The cut group size distribution will be parameterized by renewable uncertainty. In general more uncertainty will result in a distribution that favors smaller cuts to maximize the number of units generating. Implicitly providing more reserve&amp;nbsp;" vertex="1">
+          <mxGeometry height="65" width="300" x="40" y="-1427.5" as="geometry" />
+        </mxCell>
+        <mxCell id="eUd5tbv5nbSdO2CJc1Ma-34" edge="1" parent="1" source="eUd5tbv5nbSdO2CJc1Ma-35" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=0;exitY=0.5;exitDx=0;exitDy=0;entryX=1;entryY=0.5;entryDx=0;entryDy=0;dashed=1;" target="eUd5tbv5nbSdO2CJc1Ma-4">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="eUd5tbv5nbSdO2CJc1Ma-35" parent="1" style="text;html=1;whiteSpace=wrap;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;rounded=0;" value="NOTE: The cut group location distribution will be determined based on the CDF or PDF that the cut is occurring on and will be parameterized by renewable uncertainty. For example, with more uncertainty the &quot;Max Power Output&quot; CDF would favor cuts towards the beginning to middle in order to maximize the number of units generating. Implicitly providing more reserves" vertex="1">
+          <mxGeometry height="65" width="300" x="40" y="-1307.5" as="geometry" />
+        </mxCell>
+        <mxCell id="eUd5tbv5nbSdO2CJc1Ma-36" edge="1" parent="1" source="eUd5tbv5nbSdO2CJc1Ma-37" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" target="pYykfk0FnVzc-JqeeE8c-5">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="840" y="-155" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="eUd5tbv5nbSdO2CJc1Ma-37" parent="1" style="ellipse;whiteSpace=wrap;html=1;aspect=fixed;" value="End Here" vertex="1">
+          <mxGeometry height="80" width="80" x="800" y="-670" as="geometry" />
+        </mxCell>
+        <mxCell id="eUd5tbv5nbSdO2CJc1Ma-38" parent="1" style="swimlane;whiteSpace=wrap;html=1;" value="First Generation Creation Algorithm" vertex="1">
+          <mxGeometry height="1500" width="1360" x="-430" y="-1835" as="geometry" />
+        </mxCell>
+        <mxCell id="eUd5tbv5nbSdO2CJc1Ma-39" edge="1" parent="1" source="eUd5tbv5nbSdO2CJc1Ma-40" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" target="eUd5tbv5nbSdO2CJc1Ma-31">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="eUd5tbv5nbSdO2CJc1Ma-40" parent="1" style="rounded=1;whiteSpace=wrap;html=1;" value="Start First Generation Creation Algorithm for each time period specified in problem" vertex="1">
+          <mxGeometry height="130" width="220" x="-210" y="-2155" as="geometry" />
+        </mxCell>
+        <mxCell id="eUd5tbv5nbSdO2CJc1Ma-41" edge="1" parent="1" source="eUd5tbv5nbSdO2CJc1Ma-42" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" target="eUd5tbv5nbSdO2CJc1Ma-40">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="eUd5tbv5nbSdO2CJc1Ma-42" parent="1" style="rounded=1;whiteSpace=wrap;html=1;" value="Calculate set point parameters for each time period specified in problem" vertex="1">
+          <mxGeometry height="120" width="220" x="-210" y="-2405" as="geometry" />
+        </mxCell>
+        <mxCell id="eUd5tbv5nbSdO2CJc1Ma-43" parent="1" style="text;html=1;whiteSpace=wrap;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;rounded=0;" value="NOTE: This calculation will take into account time period dependent renewable uncertainty along with any other time dependent metrics." vertex="1">
+          <mxGeometry height="150" width="350" x="100" y="-2420" as="geometry" />
+        </mxCell>
+        <mxCell id="eUd5tbv5nbSdO2CJc1Ma-45" parent="1" style="swimlane;whiteSpace=wrap;html=1;" value="Stage 1 Genetic Algorithm" vertex="1">
+          <mxGeometry height="2610" width="1410" x="150" as="geometry" />
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>

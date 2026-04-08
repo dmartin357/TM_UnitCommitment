@@ -87,6 +87,24 @@ class BoundedPopulation:
         """Return all chromosomes with a finite fitness value."""
         return [c for c in self._chroms if c.is_feasible()]
 
+    @classmethod
+    def from_chromosomes(
+        cls,
+        max_size: int,
+        chromosomes: list[Chromosome],
+    ) -> "BoundedPopulation":
+        """
+        Reconstruct a BoundedPopulation from a pre-sorted chromosome list.
+
+        Bypasses add() so that all chromosomes are accepted regardless of
+        max_size.  Intended for deserialization — caller is responsible for
+        ensuring the list is sorted best→worst (ascending fitness).
+        """
+        pop = cls(max_size)
+        pop._chroms = list(chromosomes)
+        pop._seen = {c.hash for c in chromosomes}
+        return pop
+
     def __repr__(self) -> str:
         best_fit = f"{self.best.fitness:.2f}" if self.best and self.best.fitness else "N/A"
         return (
