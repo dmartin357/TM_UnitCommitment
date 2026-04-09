@@ -7,17 +7,21 @@ from dataclasses import dataclass
 
 @dataclass
 class GraphBuilderConfig:
-    # ── Rectification ─────────────────────────────────────────────────────────
-    # A ramp violation on a given unit is a candidate for rectification if the
-    # actual ramp falls within this multiplier × the applicable ramp limit.
-    # E.g. 2.0 → allow attempts to fix violations up to 2× the ramp limit.
-    # Violations larger than this immediately discard the edge.
+    # ── Per-unit rectification ────────────────────────────────────────────────
+    # When enabled, a ramp violation on a given unit is a candidate for
+    # rectification if the violation falls within rectification_multiplier ×
+    # the applicable ramp limit.  The power level is adjusted to the limit and
+    # the edge is kept.  Violations larger than the threshold discard the edge.
+    # When disabled, any ramp violation immediately discards the edge.
+    enable_unit_rectification: bool = True
     rectification_multiplier: float = 2.0
 
     # ── Net adjustment tolerance ──────────────────────────────────────────────
-    # After processing all units on a candidate edge, the cumulative net MW
-    # adjustment applied to each period's dispatch must not exceed this fraction
-    # of that period's demand.  Edges exceeding the tolerance for either period
-    # are discarded.
-    # 0.05 → ±5 % of demand.
+    # When enabled, the cumulative net MW adjustment applied across all units
+    # on a candidate edge must not exceed net_adjustment_tolerance × the
+    # period's demand for both periods i and i+1.  Edges exceeding this bound
+    # are discarded even if all per-unit ramp checks passed.
+    # 0.05 → ±5% of demand.
+    # Disable to see how many edges this check alone is eliminating.
+    enable_net_adjustment_check: bool = True
     net_adjustment_tolerance: float = 0.05

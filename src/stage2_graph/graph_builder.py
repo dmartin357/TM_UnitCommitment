@@ -152,8 +152,24 @@ def build_graph(
 
     gen_meta = _preprocess_generators(generators)
 
-    G = nx.DiGraph()
+    # Print population summary before edge-building begins
     n_periods = len(populations)
+    total_feasible = sum(len(pop.feasible()) for pop in populations)
+    total_all      = sum(len(pop) for pop in populations)
+    print(f"\n{'=' * 60}")
+    print(f"  Stage 2 — Input Population Summary  ({n_periods} periods)")
+    print(f"{'=' * 60}")
+    print(f"  {'Period':<8}  {'Demand (MW)':<13}  {'Total':>7}  {'Feasible':>9}  {'Infeasible':>11}")
+    print(f"  {'-'*8}  {'-'*13}  {'-'*7}  {'-'*9}  {'-'*11}")
+    for t, (pop, demand) in enumerate(zip(populations, demand_values)):
+        n_feasible   = len(pop.feasible())
+        n_infeasible = len(pop) - n_feasible
+        print(f"  {t:<8}  {demand:<13.1f}  {len(pop):>7}  {n_feasible:>9}  {n_infeasible:>11}")
+    print(f"  {'-'*8}  {'-'*13}  {'-'*7}  {'-'*9}  {'-'*11}")
+    print(f"  {'Total':<8}  {'':13}  {total_all:>7}  {total_feasible:>9}")
+    print(f"{'=' * 60}\n", flush=True)
+
+    G = nx.DiGraph()
 
     for i in range(n_periods - 1):
         pop_i  = populations[i]
@@ -177,8 +193,10 @@ def build_graph(
                     chrom_j, chrom_k,
                     gen_meta,
                     tol_i, tol_i1,
-                    config.rectification_multiplier,
-                    stats,
+                    enable_unit_rectification=config.enable_unit_rectification,
+                    rectification_multiplier=config.rectification_multiplier,
+                    enable_net_adjustment_check=config.enable_net_adjustment_check,
+                    stats=stats,
                 )
 
                 if result is None:
@@ -254,7 +272,9 @@ def _evaluate_edge(
     gen_meta: dict[str, dict],
     tol_i: float,
     tol_i1: float,
-    multiplier: float,
+    enable_unit_rectification: bool,
+    rectification_multiplier: float,
+    enable_net_adjustment_check: bool,
     stats: GraphBuilderStats,
 ) -> tuple[float, float] | None:
     """
@@ -310,7 +330,7 @@ def _evaluate_edge(
                 p_from=0.0, p_to=p_k,
                 pmin_to=pmin, pmax_to=pmax,
                 ramp_up_limit=meta["ramp_up_limit"],
-                multiplier=multiplier,
+                multiplier=rectification_multiplier if enable_unit_rectification else 1.0,
                 stats=stats,
             )
             if rectified is None:
@@ -336,7 +356,7 @@ def _evaluate_edge(
                 p_from=p_j,
                 pmin_from=pmin, pmax_from=pmax,
                 ramp_down_limit=meta["ramp_down_limit"],
-                multiplier=multiplier,
+                multiplier=rectification_multiplier if enable_unit_rectification else 1.0,
                 stats=stats,
             )
             if rectified is None:
@@ -353,7 +373,7 @@ def _evaluate_edge(
                     p_from=p_j, p_to=p_k,
                     pmin_to=pmin, pmax_to=pmax,
                     ramp_up_limit=meta["ramp_up_limit"],
-                    multiplier=multiplier,
+                    multiplier=rectification_multiplier if enable_unit_rectification else 1.0,
                     stats=stats,
                 )
                 if rectified is None:
@@ -368,7 +388,7 @@ def _evaluate_edge(
                     p_from=p_j, p_to=p_k,
                     pmin_to=pmin, pmax_to=pmax,
                     ramp_down_limit=meta["ramp_down_limit"],
-                    multiplier=multiplier,
+                    multiplier=rectification_multiplier if enable_unit_rectification else 1.0,
                     stats=stats,
                 )
                 if rectified is None:
@@ -388,9 +408,10 @@ def _evaluate_edge(
         net_adj_i1 += adj_k
 
     # Net adjustment tolerance check
-    if abs(net_adj_i) > tol_i or abs(net_adj_i1) > tol_i1:
-        stats.n_edges_discarded_adjustment += 1
-        return None
+    if enable_net_adjustment_check:
+        if abs(net_adj_i) > tol_i or abs(net_adj_i1) > tol_i1:
+            stats.n_edges_discarded_adjustment += 1
+            return None
 
     edge_weight = chrom_k.fitness + startup_shutdown_cost
     return edge_weight, startup_shutdown_cost
