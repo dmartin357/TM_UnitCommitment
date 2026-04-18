@@ -1,0 +1,6 @@
+The goal of this alternate stage 1 algorighm will just be to implement random cuts until the maximum power capability (all units running at 100%) is above a threshold and the minimum power 
+capability (all units commited but operating at the lowest power level) is below a threshold. The thresholds will be based on renewable uncertainty. For example, if the maximum demand with 
+renewable generation is set to 100MW and the minimum demand with renewable generation is set to 50MW with an expected demand with renewable generation set to 75MW, then the maximum 
+threshold might be 100MW plus some percentage of the expected demand and the minimum threshold might be 50MW minus some percentage of the expected demand. This algorithm will randomly cut 
+units until the maximum or minimum cumulative power output violate their respective thresholds. This iteration (the cuts prior to the violation) will be considered a sample, and the goal 
+will be to estimate the percentage that a unit was committed during a time period and subsequently how much it was committed throughout the time horizon.
