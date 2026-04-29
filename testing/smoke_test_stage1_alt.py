@@ -32,7 +32,7 @@ import logging
 import sys
 from pathlib import Path
 
-sys.path.insert(0, str(Path(__file__).parent))
+sys.path.insert(0, str(Path(__file__).parent.parent))
 
 from src.stage1_alt.config import AltStage1Config
 from src.stage1_alt.parallel import AltStage1Result, run_all_periods_alt
@@ -49,7 +49,7 @@ logging.basicConfig(
 # ── Paths ─────────────────────────────────────────────────────────────────────
 PGLIB_UC_ROOT = Path("C:/gitrepos/power-grid-lib/pglib-uc")
 INSTANCE_PATH = PGLIB_UC_ROOT / "rts_gmlc" / "2020-01-27.json"
-CSV_OUTPUT    = Path("results/stage1_alt_frequencies.csv")
+CSV_OUTPUT    = Path(__file__).parent.parent / "output" / "stage1_alt_frequencies.csv"
 
 # ── Config ────────────────────────────────────────────────────────────────────
 CONFIG = AltStage1Config(

@@ -1,0 +1,81 @@
+Generation Agent States:
+
+	Uncommited-Constrained: This state means that at the beginning of the time period, the generation unit is not commited, and is not eligible for commitment because it is currently
+							constrained by a minimum downtime requirement. The only action eligible for the unit to take during this time period is the No Bid action.
+							
+	Uncommited-Eligible: This state means that at the beginning of the time period, the generation unit is not commited, but it is eligible for commitment as it is not currently constrained
+						 by a minimum downtime requirement. In this state a generation unit will be able to take all available actions. However, for the purposes of the central dispatcher,
+						 only the startup power requirement may be assigned if the generators bid is selected. 
+						 
+	Commited-Constrained: This state means that at the beginning of the time period, the generation unit is commited and is not eligible for shutdown as the unit is constrained by a 
+						  minumum up time constraint. This represents a must run unit for the central dispatcher. The unit can take any action but the No Bid action as they must run.
+						  The central dispatcher will only be able to allocate power within the ramp limits of the generator with respect to the current power output at the beginning
+						  of the time period. This is the static state of units that are marked as must runs externally and must be on, within power limits, during the duration of the
+						  time horizon.
+						  
+	Commited-Eligible: This state means that at the beginning of the time period, the generation unit is commited and is eligible for shutdown as it is not constrained by a minimum up 
+					   time constraint. The unit will be able to take all actions, although it must be noted that it may only take the No Bid action if it is currently operating at its
+					   shutdown power limit at the beginning of the time period, the No Bid action in this case will be interpereted as the unit deciding to shut itself down.
+					   
+Generation Agent Actions:
+
+	No Bid: This action means that a generation agent chooses not to place a bid with the central dispatcher.
+	
+	Standard Bid: This action means that a generation agent chooses to place a bid consistent with the units actual cost per MW with respect to the generation agents current power output.
+	              If the unit is currently Uncommited-Eligible, then the power output will be assumed to be the required startup power.
+	
+	Low Bid: This action means that a generation agent chooses to place a bid lower than the cost per MW with respect to the current power output. If the unit is currently 
+	         Uncommited-Eligible, then the power output will be assumed to be the required startup power.
+	
+	High Bid: This action means that a generation agent chooses to place a bid lower than the cost per MW with respect to the current power output. If the unit is currently 
+	          Uncommited-Eligible, then the power output will be assumed to be the required startup power.
+			  
+Generation Agent Reward:
+
+	One part of the reward received by the generation agent will be the total $ amount received from the central dispatcher (provided that the unit is selected for commitment) minus the actual $
+	amount required to generate that much power. The other part of the reward received by the generation agent will be the $ received for acting in spinning reserve, this will be based on the
+	price that the central dispatcher is willing to pay for spinning reserves and the amount of power that a unit could produce during that time period. The amount of spinning reserve provided
+   	by unit is essentially the single period ramp up and ramp down limit of the unit. The actual power amounts will be asigned by an Economic Dispatch run with the units that the Central Dispatcher
+	selects during the market clearing process.
+	
+Generation Agent Goal:
+
+	The goal of the generation agent will be to find the policy that maximizes the discounted reward the unit receives accross all time periods. To make forecasts on the the reward
+	accross the time horizon, the central dispatcher will provide the generation units with a forecast on estimated number of units required to meet demand and spinning reserve
+	requirements in each time period, and the estimated price for spinning reserves as a percentage of the price needed to meet demand during that time period. 
+				   
+Central Dispatcher States:
+
+	Unit Demand Increasing: In this state, the number of units needed to meet demand plus reserve requirements in the current period is greater than in the previous period by 
+	                        a specified amount minimum amount.
+	
+	Unit Demand Static: In this state, the number of units needed to meet demand plus reserve requirements in the current period is equal to, or greater/lesser than the previous period
+                        within a certain window. 
+
+	Unit Demand Decreasing: In this state, the number of units needed to meet demand plus reserve requirements in the current period is less than in the previous period by 
+	                        a specified amount minimum amount.
+							
+Central Dispatcher Actions:
+
+	Increase Reserve Price: This action denotes that the central dispatcher is willing to pay more for spinning reserves relative to the current amount. Again this amount will be a 
+	                        percentage of the price needed to meet demand. This price is dependant on the uncertainty of the time periods. In general, the more uncertain a period is
+							with regards to renewable demand then the higher the spinning reserve price will be.
+	
+	Maintain Reserve Price: This action denotes that the central dispatcher is willing to pay the same amount for spinning reserves relative to the current amount. Again this amount will be a 
+	                        percentage of the price needed to meet demand. This price is dependant on the uncertainty of the time periods. In general, the more uncertain a period is
+							with regards to renewable demand then the higher the spinning reserve price will be.
+	
+	Decrease Reserve Price: This action denotes that the central dispatcher is willing to pay less for spinning reserves relative to the current amount. Again this amount will be a 
+	                        percentage of the price needed to meet demand. This price is dependant on the uncertainty of the time periods. In general, the more uncertain a period is
+							with regards to renewable demand then the higher the spinning reserve price will be.
+							
+Central Dispatcher Reward:
+
+	The reward of the Central Dispatcher will be that enough units are committed to meet demand and spinning reserve requirements. Each of these requirements will be weighted and if either one
+	fails to be met then the weighting will not apply to the reward. For example, if the weighting is 0.5 and 0.5 and spinning reserve requirements aren't able to be met, then the maximum reward
+	that the central dispatcher can receive would be 0.5 rather than 1/
+	
+Central Dispatche Goal:
+
+	The goal of the Central Dispatcher will be learning to price reserves to handle the uncertainty posed by renewable generation. A simple market clearing algorithm will be run to 
+	make the startup and shutdown decisions based on bids placed, and then power levels will be assigned to generation units based off of an Economic Dispatch algorithm.

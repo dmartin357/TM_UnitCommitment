@@ -9,19 +9,22 @@ Usage (from repo root, with power-systems conda env active):
     python smoke_test_stage1.py
 """
 
+import csv
 import json
 import logging
+import math
+import re
 import sys
 from pathlib import Path
 
 import numpy as np
 
 # Allow running from repo root without installing the package
-sys.path.insert(0, str(Path(__file__).parent))
+sys.path.insert(0, str(Path(__file__).parent.parent))
 
 from src.stage1_ga.config import GAConfig
 from src.stage1_ga.ga import run_stage1_ga
-from src.stage1_ga.parallel import run_all_periods
+from src.stage1_ga.parallel import AllPeriodsResult, run_all_periods
 
 # ── Logging setup ─────────────────────────────────────────────────────────────
 # force=True clears any handlers that Pyomo (or other imports) may have
@@ -43,6 +46,9 @@ N_WORKERS = None      # None → use all logical CPUs; set an int to cap
 PGLIB_UC_ROOT = Path("C:/gitrepos/power-grid-lib/pglib-uc")
 INSTANCE_PATH = PGLIB_UC_ROOT / "rts_gmlc" / "2020-01-27.json"
 
+# ── Output ────────────────────────────────────────────────────────────────────
+RESULTS_DIR = Path(__file__).parent / "results"
+
 # ── Config ────────────────────────────────────────────────────────────────────
 config = GAConfig(
     population_size=50,
@@ -50,7 +56,6 @@ config = GAConfig(
     sort_attribute="power_output_maximum",
     sort_ascending=False,
     location_dist_type="uniform",  # equal probability per position (random cuts)
-    demand_tolerance=0.20,         # ±20% capacity margins around demand
     crossover_operator="single_point",
     mutation_rate=0.02,
     max_generations=50,
@@ -60,37 +65,122 @@ config = GAConfig(
 )
 
 
-def load_instance(path: Path) -> tuple[dict, list[float]]:
-    """Return (thermal_generators, demand_values)."""
+class InstanceData:
+    """Parsed instance with thermal demand and per-period wind regulation requirements."""
+
+    def __init__(
+        self,
+        thermal: dict,
+        total_demand: list[float],
+        renewable_min: list[float],
+        renewable_max: list[float],
+    ) -> None:
+        self.thermal = thermal
+        self.total_demand = total_demand
+        self.renewable_min = renewable_min
+        self.renewable_max = renewable_max
+        n = len(total_demand)
+        # Cap renewable max at total demand — thermal reg-down can never exceed demand itself
+        renewable_max_eff = [min(renewable_max[t], total_demand[t]) for t in range(n)]
+        # Expected renewable output = midpoint of effective forecast band (wind + PV)
+        self.renewable_expected = [(renewable_min[t] + renewable_max_eff[t]) / 2.0 for t in range(n)]
+        # Thermal demand = total demand less expected renewable output
+        self.thermal_demand = [
+            max(0.0, total_demand[t] - self.renewable_expected[t]) for t in range(n)
+        ]
+        # Regulation requirements driven by renewable forecast uncertainty
+        self.renewable_reg_up   = [self.renewable_expected[t] - renewable_min[t] for t in range(n)]
+        self.renewable_reg_down = [renewable_max_eff[t] - self.renewable_expected[t] for t in range(n)]
+
+    def print_renewable_summary(self) -> None:
+        n = len(self.total_demand)
+        print(f"\n{'=' * 90}")
+        print(f"  Renewable Adjustment Summary  ({n} periods)")
+        print(f"{'=' * 90}")
+        print(f"  {'t':<5}  {'Total Dem':>10}  {'Ren Min':>10}  {'Ren Exp':>10}"
+              f"  {'Ren Max':>10}  {'Ren Max Cap':>11}  {'Therm Dem':>10}"
+              f"  {'Reg Up Req':>11}  {'Reg Dn Req':>11}")
+        print(f"  {'-'*5}  {'-'*10}  {'-'*10}  {'-'*10}"
+              f"  {'-'*10}  {'-'*11}  {'-'*10}  {'-'*11}  {'-'*11}")
+        for t in range(n):
+            ren_max_cap = min(self.renewable_max[t], self.total_demand[t])
+            print(f"  {t:<5}  {self.total_demand[t]:>10.1f}  {self.renewable_min[t]:>10.1f}"
+                  f"  {self.renewable_expected[t]:>10.1f}  {self.renewable_max[t]:>10.1f}"
+                  f"  {ren_max_cap:>11.1f}  {self.thermal_demand[t]:>10.1f}"
+                  f"  {self.renewable_reg_up[t]:>11.1f}  {self.renewable_reg_down[t]:>11.1f}")
+        print(f"{'=' * 90}\n", flush=True)
+
+
+def load_instance(path: Path) -> InstanceData:
+    """
+    Parse a pglib-uc JSON file and return an InstanceData.
+
+    Thermal demand per period = total demand − expected renewable output
+    where expected renewable = (aggregate pmin + aggregate pmax) / 2
+    aggregated across stochastic renewable generators (wind + PV) only.
+    Hydro generators are excluded — they are controllable and tracked separately.
+
+    Renewable max is capped at total demand before all calculations — thermal
+    regulation can never exceed actual demand for that period.
+
+    Renewable regulation requirements:
+      reg_up_req   = expected renewable − min renewable  (output could drop → thermal covers)
+      reg_down_req = min(max renewable, demand) − expected renewable  (output could surge)
+    """
     with open(path) as f:
         data = json.load(f)
+
     thermal = data["thermal_generators"]
+
     demand_raw = data["demand"]
     if isinstance(demand_raw, list):
-        demand_values: list[float] = [float(d) for d in demand_raw]
+        total_demand: list[float] = [float(d) for d in demand_raw]
     elif isinstance(demand_raw, dict):
         n = len(next(iter(demand_raw.values())))
-        demand_values = [
-            sum(bus[t] for bus in demand_raw.values()) for t in range(n)
-        ]
+        total_demand = [sum(bus[t] for bus in demand_raw.values()) for t in range(n)]
     else:
         raise ValueError(f"Unexpected demand format: {type(demand_raw)}")
-    return thermal, demand_values
+
+    n_periods = len(total_demand)
+    renewable_min: list[float] = [0.0] * n_periods
+    renewable_max: list[float] = [0.0] * n_periods
+
+    for name, gen_data in data.get("renewable_generators", {}).items():
+        if re.search(r"HYDRO", name, re.IGNORECASE):
+            continue  # hydro is controllable — exclude from stochastic aggregation
+        pmin_series = gen_data.get("power_output_minimum", [])
+        pmax_series = gen_data.get("power_output_maximum", [])
+        for t in range(n_periods):
+            if t < len(pmin_series):
+                renewable_min[t] += float(pmin_series[t])
+            if t < len(pmax_series):
+                renewable_max[t] += float(pmax_series[t])
+
+    return InstanceData(
+        thermal=thermal,
+        total_demand=total_demand,
+        renewable_min=renewable_min,
+        renewable_max=renewable_max,
+    )
 
 
-def run_single(thermal: dict, demand_values: list[float]) -> None:
-    n_thermal = len(thermal)
-    demand = demand_values[TIME_PERIOD_IDX]
-    print(f"Running single period: t={TIME_PERIOD_IDX}  demand={demand:.1f} MW\n",
+def run_single(inst: InstanceData) -> None:
+    n_thermal = len(inst.thermal)
+    demand = inst.thermal_demand[TIME_PERIOD_IDX]
+    total  = inst.total_demand[TIME_PERIOD_IDX]
+    print(f"Running single period: t={TIME_PERIOD_IDX}"
+          f"  total_demand={total:.1f} MW  thermal_demand={demand:.1f} MW\n",
           flush=True)
 
     rng = np.random.default_rng(seed=42)
     pop, stats = run_stage1_ga(
-        generators=thermal,
+        generators=inst.thermal,
         demand=demand,
         config=config,
         rng=rng,
         time_period=TIME_PERIOD_IDX,
+        reg_up_req=inst.renewable_reg_up[TIME_PERIOD_IDX],
+        reg_down_req=inst.renewable_reg_down[TIME_PERIOD_IDX],
     )
 
     stats.print_summary(time_period=TIME_PERIOD_IDX)
@@ -106,33 +196,117 @@ def run_single(thermal: dict, demand_values: list[float]) -> None:
         print("  No feasible chromosomes found.")
 
 
-def run_all(thermal: dict, demand_values: list[float]) -> None:
-    n_periods = len(demand_values)
+def export_csv(result: AllPeriodsResult, inst: InstanceData) -> Path:
+    """
+    Write one row per period.
+
+    Columns include total demand, wind estimates, thermal demand,
+    wind reg requirements, and the best chromosome's cost/committed/reg_up/reg_down.
+    """
+    RESULTS_DIR.mkdir(parents=True, exist_ok=True)
+    instance_stem = INSTANCE_PATH.stem
+    out_path = RESULTS_DIR / f"stage1_{instance_stem}.csv"
+
+    n_total = len(inst.thermal)
+
+    with open(out_path, "w", newline="") as f:
+        writer = csv.writer(f)
+        writer.writerow([
+            # Period index
+            "period",
+            # Demand breakdown
+            "total_demand_mw",
+            "renewable_min_mw",
+            "renewable_expected_mw",
+            "renewable_max_mw",
+            "thermal_demand_mw",
+            # Renewable uncertainty → regulation requirements passed to GA
+            "reg_up_req_mw",
+            "reg_down_req_mw",
+            # Best chromosome solution
+            "best_cost_usd",
+            "n_committed",
+            "n_total",
+            # Regulation capability provided by best chromosome
+            "chrom_reg_up_mw",
+            "chrom_reg_down_mw",
+            # Headroom vs requirement (positive = requirement met)
+            "reg_up_margin_mw",
+            "reg_down_margin_mw",
+            # Renewable curtailment due to thermal pmin floor
+            "renewable_loss_mw",
+            # GA run metadata
+            "n_ed_feasible",
+            "n_ed_infeasible",
+            "n_reg_infeasible",
+            "n_generations",
+            "stop_reason",
+        ])
+        for t, (pop, s) in enumerate(zip(result.populations, result.period_stats)):
+            best = pop.best
+            rup_req = inst.renewable_reg_up[t]
+            rdn_req = inst.renewable_reg_down[t]
+            chrom_rup = best.reg_up   if (best and best.reg_up   is not None) else None
+            chrom_rdn = best.reg_down if (best and best.reg_down is not None) else None
+            writer.writerow([
+                t,
+                f"{inst.total_demand[t]:.4f}",
+                f"{inst.renewable_min[t]:.4f}",
+                f"{inst.renewable_expected[t]:.4f}",
+                f"{inst.renewable_max[t]:.4f}",
+                f"{inst.thermal_demand[t]:.4f}",
+                f"{rup_req:.4f}",
+                f"{rdn_req:.4f}",
+                f"{s.best_fitness:.4f}" if math.isfinite(s.best_fitness) else "",
+                best.n_committed if best else "",
+                n_total,
+                f"{chrom_rup:.4f}" if chrom_rup is not None else "",
+                f"{chrom_rdn:.4f}" if chrom_rdn is not None else "",
+                f"{chrom_rup - rup_req:.4f}" if chrom_rup is not None else "",
+                f"{chrom_rdn - rdn_req:.4f}" if chrom_rdn is not None else "",
+                f"{best.renewable_loss:.4f}" if (best and best.renewable_loss is not None) else "",
+                s.n_ed_feasible,
+                s.n_ed_infeasible,
+                s.n_reg_infeasible,
+                s.n_generations,
+                s.stop_reason,
+            ])
+
+    print(f"  CSV exported → {out_path}\n")
+    return out_path
+
+
+def run_all(inst: InstanceData) -> None:
+    n_periods = len(inst.thermal_demand)
     print(f"Running all {n_periods} periods in parallel  "
           f"(n_workers={N_WORKERS or 'auto'})\n", flush=True)
 
     result = run_all_periods(
-        generators=thermal,
-        demand_values=demand_values,
+        generators=inst.thermal,
+        demand_values=inst.thermal_demand,
         config=config,
         n_workers=N_WORKERS,
         base_seed=42,
         show_progress=True,
+        reg_up_reqs=inst.renewable_reg_up,
+        reg_down_reqs=inst.renewable_reg_down,
     )
 
     result.print_summary()
+    export_csv(result, inst)
 
 
 def main() -> None:
     print(f"Loading instance: {INSTANCE_PATH}")
-    thermal, demand_values = load_instance(INSTANCE_PATH)
-    print(f"Instance: {len(thermal)} thermal generators, "
-          f"{len(demand_values)} time periods\n", flush=True)
+    inst = load_instance(INSTANCE_PATH)
+    print(f"Instance: {len(inst.thermal)} thermal generators, "
+          f"{len(inst.total_demand)} time periods\n", flush=True)
+    inst.print_renewable_summary()
 
     if MODE == "single":
-        run_single(thermal, demand_values)
+        run_single(inst)
     elif MODE == "all":
-        run_all(thermal, demand_values)
+        run_all(inst)
     else:
         raise ValueError(f"Unknown MODE '{MODE}'. Use 'single' or 'all'.")
 

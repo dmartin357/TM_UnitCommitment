@@ -37,7 +37,7 @@ from .population import BoundedPopulation
 # ── Worker (runs in a subprocess) ────────────────────────────────────────────
 
 def _period_worker(
-    args: tuple[int, dict, float, GAConfig, int],
+    args: tuple[int, dict, float, GAConfig, int, float, float],
 ) -> tuple[int, BoundedPopulation, GAStats]:
     """
     Worker entry point — must be a module-level function so it is picklable
@@ -45,13 +45,15 @@ def _period_worker(
 
     Parameters (packed into a single tuple for executor.map compatibility)
     ----------
-    period_idx  : time period index (0-based)
-    generators  : {name: gen_data} thermal generator dict
-    demand      : demand (MW) for this period
-    config      : GAConfig
-    seed        : integer seed for this period's RNG
+    period_idx   : time period index (0-based)
+    generators   : {name: gen_data} thermal generator dict
+    demand       : expected thermal demand (MW) for this period
+    config       : GAConfig
+    seed         : integer seed for this period's RNG
+    reg_up_req   : MW of regulation-up the fleet must provide
+    reg_down_req : MW of regulation-down the fleet must provide
     """
-    period_idx, generators, demand, config, seed = args
+    period_idx, generators, demand, config, seed, reg_up_req, reg_down_req = args
 
     # Silence all logging inside worker processes
     logging.disable(logging.CRITICAL)
@@ -63,6 +65,8 @@ def _period_worker(
         config=config,
         rng=rng,
         time_period=period_idx,
+        reg_up_req=reg_up_req,
+        reg_down_req=reg_down_req,
     )
     return period_idx, pop, stats
 
@@ -102,8 +106,10 @@ class AllPeriodsResult:
             print(f"  Total cost (sum)     : {sum(best_fitnesses):,.2f}")
         print()
         print(f"  {'Period':<8}  {'Demand (MW)':<13}  {'Best Cost ($)':<18}"
-              f"  {'Committed':<12}  {'Gen':<6}  {'Wall (s)':<10}  Stop")
-        print(f"  {'-'*8}  {'-'*13}  {'-'*18}  {'-'*12}  {'-'*6}  {'-'*10}  {'-'*20}")
+              f"  {'Committed':<12}  {'Reg Up':>10}  {'Reg Dn':>10}"
+              f"  {'Gen':<6}  {'Wall (s)':<10}  Stop")
+        print(f"  {'-'*8}  {'-'*13}  {'-'*18}  {'-'*12}  {'-'*10}  {'-'*10}"
+              f"  {'-'*6}  {'-'*10}  {'-'*20}")
         for t, (s, pop, demand) in enumerate(
             zip(self.period_stats, self.populations, self.demand_values)
         ):
@@ -115,9 +121,11 @@ class AllPeriodsResult:
                 f"{s.best_fitness:>18,.2f}" if math.isfinite(s.best_fitness)
                 else f"{'No solution':>18}"
             )
+            reg_up_str  = f"{best.reg_up:>10,.1f}"  if (best and best.reg_up  is not None) else f"{'N/A':>10}"
+            reg_dn_str  = f"{best.reg_down:>10,.1f}" if (best and best.reg_down is not None) else f"{'N/A':>10}"
             print(f"  {t:<8}  {demand:<13.1f}  {best_str}"
-                  f"  {committed_str:<12}  {s.n_generations:<6}"
-                  f"  {s.total_wall_seconds:<10.2f}  {s.stop_reason}")
+                  f"  {committed_str:<12}  {reg_up_str}  {reg_dn_str}"
+                  f"  {s.n_generations:<6}  {s.total_wall_seconds:<10.2f}  {s.stop_reason}")
         print(f"{'=' * 70}\n", flush=True)
 
 
@@ -130,6 +138,8 @@ def run_all_periods(
     n_workers: int | None = None,
     base_seed: int = 42,
     show_progress: bool = True,
+    reg_up_reqs: list[float] | None = None,
+    reg_down_reqs: list[float] | None = None,
 ) -> AllPeriodsResult:
     """
     Run Stage 1 GA for every time period in parallel.
@@ -137,12 +147,15 @@ def run_all_periods(
     Parameters
     ----------
     generators    : {name: gen_data} thermal generator dict.
-    demand_values : demand (MW) for each time period, length = n_periods.
+    demand_values : expected thermal demand (MW) per time period.
     config        : GAConfig shared across all periods.
-    n_workers     : number of parallel worker processes.  Defaults to the
-                    number of logical CPUs (os.cpu_count()).
+    n_workers     : number of parallel worker processes.  Defaults to all CPUs.
     base_seed     : period t uses seed = base_seed + t for reproducibility.
     show_progress : print a one-liner to stdout as each period completes.
+    reg_up_reqs   : MW of regulation-up required per period (renewable drop risk).
+                    Defaults to zero for all periods if None.
+    reg_down_reqs : MW of regulation-down required per period (renewable surge risk).
+                    Defaults to zero for all periods if None.
 
     Returns
     -------
@@ -152,8 +165,11 @@ def run_all_periods(
     if n_workers is None:
         n_workers = os.cpu_count() or 1
 
+    _reg_up   = reg_up_reqs   if reg_up_reqs   is not None else [0.0] * n_periods
+    _reg_down = reg_down_reqs if reg_down_reqs is not None else [0.0] * n_periods
+
     worker_args = [
-        (t, generators, demand_values[t], config, base_seed + t)
+        (t, generators, demand_values[t], config, base_seed + t, _reg_up[t], _reg_down[t])
         for t in range(n_periods)
     ]
 

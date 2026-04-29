@@ -54,6 +54,7 @@ class GAStats:
     # ED outcomes
     n_ed_feasible: int = 0          # ED returned a finite cost
     n_ed_infeasible: int = 0        # ED raised EDInfeasible
+    n_reg_infeasible: int = 0       # ED feasible but failed reg up/down requirement
 
     # Per-generation timing (seconds)
     gen_wall_times: list[float] = field(default_factory=list)
@@ -68,7 +69,7 @@ class GAStats:
 
     @property
     def n_ed_total(self) -> int:
-        return self.n_ed_feasible + self.n_ed_infeasible
+        return self.n_ed_feasible + self.n_ed_infeasible + self.n_reg_infeasible
 
     @property
     def mean_gen_wall_seconds(self) -> float:
@@ -105,7 +106,8 @@ class GAStats:
         print(f"  Duplicates skipped  : {self.n_duplicates_skipped}")
         print(f"  ED solves (total)   : {self.n_ed_total}"
               f"  feasible={self.n_ed_feasible}"
-              f"  infeasible={self.n_ed_infeasible}")
+              f"  ed_infeasible={self.n_ed_infeasible}"
+              f"  reg_infeasible={self.n_reg_infeasible}")
         if self.n_ed_total > 0:
             infeas_pct = 100.0 * self.n_ed_infeasible / self.n_ed_total
             print(f"  Infeasibility rate  : {infeas_pct:.1f}%")
@@ -123,6 +125,8 @@ def run_stage1_ga(
     config: GAConfig,
     rng: np.random.Generator | None = None,
     time_period: int | None = None,
+    reg_up_req: float = 0.0,
+    reg_down_req: float = 0.0,
 ) -> tuple[BoundedPopulation, GAStats]:
     """
     Run the Stage 1 GA for a single time period.
@@ -130,10 +134,12 @@ def run_stage1_ga(
     Parameters
     ----------
     generators  : {name: gen_data} from instance JSON (thermal generators only).
-    demand      : total MW demand for this time period.
+    demand      : expected thermal MW demand for this time period.
     config      : GAConfig instance.
     rng         : NumPy random Generator (a new one is created if None).
     time_period : Optional period index, used only for logging labels.
+    reg_up_req  : MW of regulation-up the committed fleet must provide (renewable drop risk).
+    reg_down_req: MW of regulation-down the committed fleet must provide (renewable surge risk).
 
     Returns
     -------
@@ -154,7 +160,9 @@ def run_stage1_ga(
         sort_attribute=config.sort_attribute,
         sort_ascending=config.sort_ascending,
         location_dist_type=config.location_dist_type,
-        demand_tolerance=config.demand_tolerance,
+        demand=demand,
+        reg_up_req=reg_up_req,
+        reg_down_req=reg_down_req,
     )
 
     sorted_names = init_gen.sorted_names
@@ -171,12 +179,12 @@ def run_stage1_ga(
                 period_label, config.initial_sample_size)
 
     for _ in range(config.initial_sample_size):
-        chrom = init_gen.generate(rng, demand)
+        chrom = init_gen.generate(rng)
         stats.n_seed_chromosomes += 1
         if pop.seen(chrom):
             stats.n_duplicates_skipped += 1
             continue
-        _evaluate(chrom, generators, demand, config.solver, stats)
+        _evaluate(chrom, generators, demand, config.solver, stats, reg_up_req, reg_down_req)
         stats.n_seed_evaluated += 1
         pop.add(chrom)
 
@@ -208,10 +216,10 @@ def run_stage1_ga(
         feasible = pop.feasible()
         if len(feasible) < 2:
             # Not enough feasible chromosomes yet — keep seeding
-            chrom = init_gen.generate(rng, demand)
+            chrom = init_gen.generate(rng)
             stats.n_seed_chromosomes += 1
             if not pop.seen(chrom):
-                _evaluate(chrom, generators, demand, config.solver, stats)
+                _evaluate(chrom, generators, demand, config.solver, stats, reg_up_req, reg_down_req)
                 stats.n_seed_evaluated += 1
                 pop.add(chrom)
             else:
@@ -230,7 +238,7 @@ def run_stage1_ga(
             if pop.seen(child):
                 stats.n_duplicates_skipped += 1
             else:
-                _evaluate(child, generators, demand, config.solver, stats)
+                _evaluate(child, generators, demand, config.solver, stats, reg_up_req, reg_down_req)
                 stats.n_offspring_evaluated += 1
                 pop.add(child)
 
@@ -278,22 +286,75 @@ def _evaluate(
     demand: float,
     solver: str,
     stats: GAStats,
+    reg_up_req: float = 0.0,
+    reg_down_req: float = 0.0,
 ) -> None:
-    """Run ED and set chrom.fitness / chrom.dispatch in-place; update stats."""
+    """
+    Run ED and set chrom.fitness / chrom.dispatch / reg_up / reg_down in-place.
+
+    After a feasible ED solve, checks that the committed fleet can provide enough
+    reg-up to cover a drop in renewable output.  Reg-down shortfalls are not
+    penalised — renewable curtailment is always an option when output surges.
+
+    If the committed fleet's aggregate pmin exceeds the expected thermal demand,
+    the ED demand is augmented to sum(pmin) so the problem remains feasible.  The
+    surplus (renewable_loss) represents renewable energy that must be curtailed to
+    accommodate the thermal minimum-generation floor.
+    """
+    # Augment demand to committed pmin if necessary
+    committed_pmin = sum(
+        float(generators[name].get("power_output_minimum", 0.0))
+        for name in chrom.committed
+    )
+    effective_demand = max(demand, committed_pmin)
+    chrom.renewable_loss = effective_demand - demand   # 0 when no augmentation needed
+
     try:
         cost, dispatch = solve_ed_piecewise_linear(
             committed_names=chrom.committed,
             generators=generators,
-            demand=demand,
+            demand=effective_demand,
             solver=solver,
         )
-        chrom.fitness = cost
+        chrom.fitness  = cost
         chrom.dispatch = dispatch
-        stats.n_ed_feasible += 1
+        chrom.reg_up, chrom.reg_down = _compute_regulation(chrom, generators)
+        if chrom.reg_up < reg_up_req:
+            chrom.fitness = math.inf   # can't cover renewable drop — truly infeasible
+            stats.n_reg_infeasible += 1
+        else:
+            stats.n_ed_feasible += 1
     except EDInfeasible:
-        chrom.fitness = math.inf
+        chrom.fitness  = math.inf
         chrom.dispatch = None
+        chrom.reg_up   = None
+        chrom.reg_down = None
         stats.n_ed_infeasible += 1
+
+
+def _compute_regulation(
+    chrom: Chromosome,
+    generators: dict,
+) -> tuple[float, float]:
+    """
+    Return (total_reg_up, total_reg_down) in MW for the chromosome's committed set.
+
+    Per unit:
+      reg_up   = min(ramp_up_limit,   pmax - dispatch)
+      reg_down = min(ramp_down_limit, dispatch - pmin)
+    """
+    total_up = total_down = 0.0
+    dispatch = chrom.dispatch or {}
+    for name in chrom.committed:
+        gen   = generators[name]
+        mw    = dispatch.get(name, 0.0)
+        pmax  = float(gen.get("power_output_maximum", 0.0))
+        pmin  = float(gen.get("power_output_minimum", 0.0))
+        r_up  = float(gen.get("ramp_up_limit",   0.0))
+        r_dn  = float(gen.get("ramp_down_limit", 0.0))
+        total_up   += min(r_up, max(0.0, pmax - mw))
+        total_down += min(r_dn, max(0.0, mw  - pmin))
+    return total_up, total_down
 
 
 def _tournament_select(

@@ -15,7 +15,7 @@ chromosome stores bits as a list of ints, fitness as a float (or null for
 infeasible), and dispatch as a {name: MW} dict (or null).
 
     {
-      "format_version": "1.0",
+      "format_version": "1.1",
       "saved_at": "<ISO-8601 UTC timestamp>",
       "gen_names": ["GEN421", "GEN53", ...],
       "n_periods": 48,
@@ -25,7 +25,8 @@ infeasible), and dispatch as a {name: MW} dict (or null).
         {
           "max_size": 200,
           "chromosomes": [
-            {"bits": [1, 0, ...], "fitness": 874321.5, "dispatch": {"GEN53": 156.0, ...}},
+            {"bits": [1, 0, ...], "fitness": 874321.5, "dispatch": {"GEN53": 156.0, ...},
+             "reg_up": 412.3, "reg_down": 198.7},
             ...
           ]
         },
@@ -56,7 +57,8 @@ from ..stage1_ga.ga import GAStats
 from ..stage1_ga.parallel import AllPeriodsResult
 from ..stage1_ga.population import BoundedPopulation
 
-FORMAT_VERSION = "1.0"
+FORMAT_VERSION = "1.2"
+_SUPPORTED_VERSIONS = {"1.0", "1.1", "1.2"}
 
 
 # ── Public API ────────────────────────────────────────────────────────────────
@@ -121,10 +123,10 @@ def load_stage1_result(path: str | Path) -> AllPeriodsResult:
     data = json.loads(path.read_text())
 
     version = data.get("format_version")
-    if version != FORMAT_VERSION:
+    if version not in _SUPPORTED_VERSIONS:
         raise ValueError(
             f"Unsupported Stage 1 file format version: {version!r}. "
-            f"Expected {FORMAT_VERSION!r}."
+            f"Supported: {sorted(_SUPPORTED_VERSIONS)}."
         )
 
     gen_names: list[str] = data["gen_names"]
@@ -157,9 +159,12 @@ def _serialize_population(pop: BoundedPopulation) -> dict:
 
 def _serialize_chromosome(c: Chromosome) -> dict:
     return {
-        "bits":     c.bits.tolist(),
-        "fitness":  c.fitness,           # float or None
-        "dispatch": c.dispatch,          # {name: MW} or None
+        "bits":           c.bits.tolist(),
+        "fitness":        c.fitness,           # float or None
+        "dispatch":       c.dispatch,          # {name: MW} or None
+        "reg_up":         c.reg_up,            # float or None
+        "reg_down":       c.reg_down,          # float or None
+        "renewable_loss": c.renewable_loss,    # float or None
     }
 
 
@@ -189,8 +194,11 @@ def _deserialize_population(
 def _deserialize_chromosome(data: dict, gen_names: list[str]) -> Chromosome:
     bits = np.array(data["bits"], dtype=np.uint8)
     c = Chromosome(gen_names=gen_names, bits=bits)
-    c.fitness  = data["fitness"]   # float or None
-    c.dispatch = data["dispatch"]  # dict or None
+    c.fitness  = data["fitness"]              # float or None
+    c.dispatch = data["dispatch"]             # dict or None
+    c.reg_up         = data.get("reg_up")            # None for v1.0/1.1 files
+    c.reg_down       = data.get("reg_down")          # None for v1.0/1.1 files
+    c.renewable_loss = data.get("renewable_loss")    # None for v1.0/1.1 files
     return c
 
 

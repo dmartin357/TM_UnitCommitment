@@ -32,6 +32,15 @@ class Chromosome:
     fitness: float | None = None
     # Per-generator dispatch levels (MW); None until evaluated.
     dispatch: dict[str, float] | None = None
+    # Regulation capability (MW); computed alongside dispatch, None until evaluated.
+    # reg_up  = sum over committed units of min(ramp_up_limit,  pmax - dispatch)
+    # reg_down = sum over committed units of min(ramp_down_limit, dispatch - pmin)
+    reg_up:   float | None = None
+    reg_down: float | None = None
+    # Renewable energy lost to thermal minimum-generation constraints (MW).
+    # > 0 when sum(pmin, committed) > expected thermal demand; the ED demand is
+    # augmented to sum(pmin) in that case, forcing curtailment of renewable output.
+    renewable_loss: float | None = None
 
     def __post_init__(self) -> None:
         self.hash = _hash_bits(self.bits)
@@ -87,8 +96,12 @@ class Chromosome:
         return hash(self.hash)
 
     def __repr__(self) -> str:
-        fit = f"{self.fitness:.2f}" if self.fitness is not None else "None"
-        return f"Chromosome(n={len(self.bits)}, committed={self.n_committed}, fitness={fit})"
+        fit = f"{self.fitness:.2f}"         if self.fitness        is not None else "None"
+        ru  = f"{self.reg_up:.1f}"          if self.reg_up         is not None else "None"
+        rd  = f"{self.reg_down:.1f}"        if self.reg_down       is not None else "None"
+        rl  = f"{self.renewable_loss:.1f}"  if self.renewable_loss is not None else "None"
+        return (f"Chromosome(n={len(self.bits)}, committed={self.n_committed}, "
+                f"fitness={fit}, reg_up={ru}, reg_down={rd}, renewable_loss={rl})")
 
 
 # ── Internal helpers ──────────────────────────────────────────────────────────

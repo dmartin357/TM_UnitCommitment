@@ -17,40 +17,30 @@ class GAConfig:
     initial_sample_size: int = 100
 
     # ── CDF initial generation ────────────────────────────────────────────────
-    # Generators are ranked by Pmax descending.  Two CDFs are computed over
-    # the remaining committed generators in that shared rank order:
+    # Generators are ranked by the chosen sort_attribute and a discrete
+    # probability distribution over cut positions is derived from it.
     #
-    #   Pmax CDF[k] = sum(pmax[1..k])   — used as the location probability dist
-    #   Pmin CDF[k] = sum(pmin[1..k])   — same rank order (not sorted by Pmin)
-    #
-    # The "highest" (last) CDF value of each = sum(pmax/pmin, all remaining),
-    # which is what the stopping criteria checks against demand * (1 ± tol).
-    #
-    # sort_attribute / sort_ascending are kept as parameters for future
-    # experimentation with alternative ranking dimensions, but the baseline
-    # algorithm always uses Pmax descending.
+    # sort_attribute / sort_ascending control both the ranking and the
+    # probability weights.  The baseline uses Pmax descending.
     sort_attribute: str = "power_output_maximum"
     sort_ascending: bool = False   # False → descending (largest Pmax first)
     # 'uniform' → equal probability for every position (random cuts, no bias).
-    # 'cdf'     → normalized cumulative Pmax values; biases cuts toward smaller
-    #             generators, preserving large committed units.
-    # 'pdf'     → weight proportional to individual Pmax value.
+    # 'cdf'     → normalized cumulative attribute values; biases cuts toward
+    #             smaller generators, preserving large committed units.
+    # 'pdf'     → weight proportional to individual attribute value.
     location_dist_type: str = "uniform"
 
-    # ── Cut group stopping criteria ───────────────────────────────────────────
-    # Generators are cut one at a time (iteratively) until one of these margins
-    # would be violated.  For a demand D and tolerance t:
-    #   • Keep cutting while sum(pmax, committed) >= D * (1 + t)   [capacity buffer]
-    #   • Keep cutting while sum(pmin, committed) <= D * (1 - t)   [over-commitment buffer]
-    # The first cut that would breach either bound is undone; all prior cuts
-    # form the cut group for that chromosome.
-    demand_tolerance: float = 0.20  # 0.20 → ±20% margins around demand
-
-    # ── Renewable uncertainty ─────────────────────────────────────────────────
-    # Float in [0, 1].  0 = no uncertainty, 1 = maximum uncertainty.
-    # Reserved for future use (e.g., tightening demand_tolerance or biasing
-    # the location distribution under high renewable output variability).
-    renewable_uncertainty: float = 0.0
+    # ── Cut group stopping criterion ──────────────────────────────────────────
+    # Generators are cut one at a time until the proposed cut would reduce the
+    # committed fleet's aggregate ramp capability below the regulation
+    # requirements derived from renewable forecast uncertainty:
+    #
+    #   Keep cutting while sum(ramp_up_limit,   committed) >= reg_up_req
+    #   Keep cutting while sum(ramp_down_limit, committed) >= reg_down_req
+    #
+    # reg_up_req and reg_down_req are computed per time period from the
+    # renewable forecast band and passed directly to run_stage1_ga() —
+    # they are not stored in GAConfig.
 
     # ── GA operators ─────────────────────────────────────────────────────────
     # Name must match a key in operators.CROSSOVER_REGISTRY.

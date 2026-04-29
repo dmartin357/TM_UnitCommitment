@@ -7,44 +7,40 @@ Algorithm (per chromosome)
    permanently committed and excluded from the cut pool.
 
 2. Repeat:
-   a. Sort the currently committed may-run generators by Pmax descending.
-      Compute two CDFs in that shared rank order:
-        Pmax CDF[k] = cumsum(pmax[1..k])   ← used as the location probability dist
-        Pmin CDF[k] = cumsum(pmin[1..k])   ← same rank order, not sorted by Pmin
-      Normalize the Pmax CDF to get a discrete probability distribution over
-      cut positions.  Higher-ranked (lower-Pmax) positions get higher probability,
-      so the algorithm preferentially cuts smaller generators first.
+   a. Sort the currently committed may-run generators by the chosen attribute
+      and compute a discrete probability distribution over cut positions.
 
-   b. Sample one generator from the Pmax CDF distribution (the "cut candidate").
+   b. Sample one generator from that distribution (the "cut candidate").
 
-   c. Project the highest CDF values AFTER removing that generator:
-        new_pmax_total = last value of new Pmax CDF = sum(pmax, remaining)
-        new_pmin_total = last value of new Pmin CDF = sum(pmin, remaining)
+   c. Project the aggregate ramp capability AFTER removing that generator:
+        new_ramp_up   = sum(ramp_up_limit,   remaining committed)
+        new_ramp_down = sum(ramp_down_limit,  remaining committed)
       Check:
-        upper margin:  new_pmax_total >= demand * (1 + tolerance)
-        lower margin:  new_pmin_total >= demand * (1 - tolerance)
+        new_ramp_up   >= reg_up_req    (fleet can still cover a renewable drop)
+        new_ramp_down >= reg_down_req  (fleet can still absorb a renewable surge)
 
-   d. If BOTH margins still hold → accept the cut and continue.
-      If EITHER margin would be violated → undo (don't apply the cut) and stop.
+   d. If BOTH checks pass → accept the cut and continue.
+      If EITHER would be violated → undo (don't apply the cut) and stop.
 
 3. The resulting bit vector is the chromosome.
 
-Rationale for the stopping criteria
--------------------------------------
-  upper margin (capacity buffer):
-    Pmax CDF total >= demand * (1 + tol).  Prevents cutting so many generators
-    that the fleet can't cover demand plus an upside uncertainty buffer.
+Rationale for the four stopping checks
+----------------------------------------
+  Capacity upper (new_pmax >= thermal_max_demand):
+    Ensures the fleet can still meet demand in the worst case — renewables at
+    their minimum, so thermal must cover the full gap.
+    thermal_max_demand = demand + reg_up_req = total_demand − renewable_min.
 
-  lower margin (min-generation floor):
-    Pmin CDF total >= demand * (1 - tol).  Both totals decrease monotonically as
-    cuts are accepted; the lower margin fires when the committed fleet's minimum
-    generation has been reduced far enough.  Stopping here ensures the ED still
-    has flexibility: sum(pmin) is close to but above demand*(1-tol), well below
-    demand itself.
+  Reg-up check (new_ramp_up >= reg_up_req):
+    Ensures the fleet retains enough upward ramp capacity to compensate if
+    aggregate renewable output falls to its minimum.
 
-The Pmax CDF (and therefore the probability distribution) is recomputed after
-every accepted cut because removing a generator changes the relative weights of
-the remaining pool.
+  Reg-down check (new_ramp_down >= reg_down_req):
+    Ensures the fleet can reduce output fast enough if renewables surge to their
+    maximum, preventing over-generation.
+
+The location-probability distribution is recomputed after every accepted cut
+because removing a generator changes the relative weights of the remaining pool.
 """
 
 from __future__ import annotations
@@ -65,8 +61,12 @@ class InitialPopulationGenerator:
     generators         : {name: gen_data} from instance JSON.
     sort_attribute     : attribute to sort generators by (and weight the CDF).
     sort_ascending     : True → smallest first in the ranked list.
-    location_dist_type : 'pdf' or 'cdf' — how attribute values become probabilities.
-    demand_tolerance   : fraction of demand used as the feasibility margin (e.g., 0.20).
+    location_dist_type : 'uniform', 'pdf', or 'cdf'.
+    demand             : expected thermal demand (MW) for this period.
+    reg_up_req         : MW of upward ramp the committed fleet must retain
+                         (= renewable_expected − renewable_min).
+    reg_down_req       : MW of downward ramp the committed fleet must retain
+                         (= renewable_max − renewable_expected).
     """
 
     def __init__(
@@ -75,56 +75,75 @@ class InitialPopulationGenerator:
         sort_attribute: str,
         sort_ascending: bool,
         location_dist_type: str,
-        demand_tolerance: float,
+        demand: float = 0.0,
+        reg_up_req: float = 0.0,
+        reg_down_req: float = 0.0,
     ) -> None:
         self._generators = generators
         self._sort_attribute = sort_attribute
         self._sort_ascending = sort_ascending
         self._location_dist_type = location_dist_type
-        self._demand_tolerance = demand_tolerance
+        self._reg_up_req = reg_up_req
+        self._reg_down_req = reg_down_req
+
+        # Worst-case thermal demand = demand when renewables are at their minimum
+        #   thermal_max = demand + reg_up_req  = total_demand − renewable_min
+        self._thermal_max_demand: float = demand + reg_up_req
 
         # Stable bit-vector ordering: must-run first, then may-run
         self._sorted_names, self._must_run_sorted, self._may_run_sorted = (
             build_static_ordering(generators, sort_attribute, sort_ascending)
         )
 
-        # Pre-cache pmax and pmin for every generator (avoids repeated dict lookups)
+        # Pre-cache pmax and effective regulation potentials (avoids repeated dict lookups).
+        # reg_up_potential   = min(ramp_up_limit,   pmax - pmin)  — actual achievable reg-up at pmin dispatch
+        # reg_down_potential = min(ramp_down_limit, pmax - pmin)  — actual achievable reg-down at pmax dispatch
+        # Using raw ramp limits overestimates headroom-constrained generators (ramp > pmax-pmin),
+        # causing the cutting criterion to pass when the actual reg capacity would fail.
         self._pmax: dict[str, float] = {
             n: float(g.get("power_output_maximum", 0.0))
             for n, g in generators.items()
         }
-        self._pmin: dict[str, float] = {
-            n: float(g.get("power_output_minimum", 0.0))
+        self._reg_up_potential: dict[str, float] = {
+            n: min(
+                float(g.get("ramp_up_limit", 0.0)),
+                float(g.get("power_output_maximum", 0.0)) - float(g.get("power_output_minimum", 0.0)),
+            )
+            for n, g in generators.items()
+        }
+        self._reg_down_potential: dict[str, float] = {
+            n: min(
+                float(g.get("ramp_down_limit", 0.0)),
+                float(g.get("power_output_maximum", 0.0)) - float(g.get("power_output_minimum", 0.0)),
+            )
             for n, g in generators.items()
         }
 
-        # Must-run capacity sums are fixed across all chromosomes
-        self._must_run_pmax: float = sum(self._pmax[n] for n in self._must_run_sorted)
-        self._must_run_pmin: float = sum(self._pmin[n] for n in self._must_run_sorted)
+        # Must-run sums are fixed across all chromosomes
+        self._must_run_pmax:           float = sum(self._pmax[n]              for n in self._must_run_sorted)
+        self._must_run_ramp_up:        float = sum(self._reg_up_potential[n]  for n in self._must_run_sorted)
+        self._must_run_ramp_down:      float = sum(self._reg_down_potential[n] for n in self._must_run_sorted)
 
     # ── Public API ────────────────────────────────────────────────────────────
 
-    def generate(self, rng: np.random.Generator, demand: float) -> Chromosome:
+    def generate(self, rng: np.random.Generator) -> Chromosome:
         """
-        Sample one chromosome for the given demand level.
+        Sample one chromosome.
 
-        The cut group is built iteratively: one generator is cut per step,
-        the CDF is recomputed, and the step is accepted only if both
-        capacity margins remain satisfied.
+        Generators are cut one at a time.  After each proposed cut the
+        aggregate ramp-up and ramp-down capability of the remaining committed
+        fleet is checked against the regulation requirements.  The first cut
+        that would violate either requirement is rejected; the chromosome is
+        built from all prior accepted cuts.
         """
-        # Track currently committed may-run generators as a list (for CDF
-        # computation) and a set (for O(1) membership and removal).
         committed_list = list(self._may_run_sorted)
         committed_set  = set(self._may_run_sorted)
 
-        current_pmax = self._must_run_pmax + sum(self._pmax[n] for n in committed_list)
-        current_pmin = self._must_run_pmin + sum(self._pmin[n] for n in committed_list)
-
-        upper_limit = demand * (1.0 + self._demand_tolerance)
-        lower_limit = demand * (1.0 - self._demand_tolerance)
+        current_pmax      = self._must_run_pmax      + sum(self._pmax[n]               for n in committed_list)
+        current_ramp_up   = self._must_run_ramp_up   + sum(self._reg_up_potential[n]   for n in committed_list)
+        current_ramp_down = self._must_run_ramp_down + sum(self._reg_down_potential[n] for n in committed_list)
 
         while committed_list:
-            # Recompute CDF/PDF for currently committed may-run generators
             sorted_subset, probs = compute_location_probs(
                 committed_list,
                 self._generators,
@@ -133,29 +152,28 @@ class InitialPopulationGenerator:
                 self._location_dist_type,
             )
 
-            # Sample one candidate to cut
             cut_idx = int(rng.choice(len(sorted_subset), p=probs))
             cut_gen = sorted_subset[cut_idx]
 
-            # Project capacity after this cut
-            new_pmax = current_pmax - self._pmax[cut_gen]
-            new_pmin = current_pmin - self._pmin[cut_gen]
+            new_pmax      = current_pmax      - self._pmax[cut_gen]
+            new_ramp_up   = current_ramp_up   - self._reg_up_potential[cut_gen]
+            new_ramp_down = current_ramp_down - self._reg_down_potential[cut_gen]
 
-            # Reject the cut if either margin would be violated:
-            #   new_pmax < upper_limit → too little capacity remaining
-            #   new_pmin < lower_limit → min-generation floor dropped too low
-            # Both pmax and pmin decrease monotonically as cuts are accepted.
-            # We cut TOWARD lower_limit from above; stop when we'd overshoot it.
-            if new_pmax < upper_limit or new_pmin < lower_limit:
+            # Reject cut if any of the three feasibility checks would be violated
+            if (
+                new_pmax      < self._thermal_max_demand  # can't cover worst-case demand
+                or new_ramp_up   < self._reg_up_req       # insufficient reg-up reserve
+                or new_ramp_down < self._reg_down_req     # insufficient reg-down reserve
+            ):
                 break
 
-            # Accept the cut
             committed_set.discard(cut_gen)
-            committed_list = [n for n in committed_list if n != cut_gen]
-            current_pmax = new_pmax
-            current_pmin = new_pmin
+            committed_list    = [n for n in committed_list if n != cut_gen]
+            current_pmax      = new_pmax
+            current_ramp_up   = new_ramp_up
+            current_ramp_down = new_ramp_down
 
-        # Build the bit vector using the stable sorted_names ordering
+
         bits = np.array(
             [
                 1 if (n in self._must_run_sorted or n in committed_set) else 0

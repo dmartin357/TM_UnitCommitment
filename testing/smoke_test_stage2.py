@@ -27,7 +27,7 @@ from collections import defaultdict
 from pathlib import Path
 
 # Allow running from repo root without installing the package
-sys.path.insert(0, str(Path(__file__).parent))
+sys.path.insert(0, str(Path(__file__).parent.parent))
 
 from src.io.stage1_io import load_stage1_result, save_stage1_result
 from src.stage1_ga.config import GAConfig
@@ -47,7 +47,7 @@ logging.basicConfig(
 # ── Paths ─────────────────────────────────────────────────────────────────────
 PGLIB_UC_ROOT      = Path("C:/gitrepos/power-grid-lib/pglib-uc")
 INSTANCE_PATH      = PGLIB_UC_ROOT / "rts_gmlc" / "2020-01-27.json"
-STAGE1_RESULT_PATH = Path("results/stage1_rts_gmlc_2020-01-27.json")
+STAGE1_RESULT_PATH = Path(__file__).parent.parent / "output" / "stage1_rts_gmlc_2020-01-27.json"
 
 # ── Mode ──────────────────────────────────────────────────────────────────────
 MODE = "load_or_run"   # 'load_or_run' | 'run_and_save' | 'load_only'
@@ -60,7 +60,6 @@ STAGE1_CONFIG = GAConfig(
     sort_attribute="power_output_maximum",
     sort_ascending=False,
     location_dist_type="uniform",
-    demand_tolerance=0.20,
     crossover_operator="single_point",
     mutation_rate=0.02,
     max_generations=50,
