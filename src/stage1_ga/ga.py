@@ -292,9 +292,11 @@ def _evaluate(
     """
     Run ED and set chrom.fitness / chrom.dispatch / reg_up / reg_down in-place.
 
-    After a feasible ED solve, checks that the committed fleet can provide enough
-    reg-up to cover a drop in renewable output.  Reg-down shortfalls are not
-    penalised — renewable curtailment is always an option when output surges.
+    After a feasible ED solve, reg-up and reg-down are computed and stored for
+    reporting.  Shortfalls are counted in stats but do not mark the chromosome
+    infeasible — the GA optimises on cost, and the CSV margin columns show any
+    reserve shortfall.  Renewable curtailment covers reg-down shortfalls; reg-up
+    shortfalls at the period level may be resolved by Stage 2 chromosome selection.
 
     If the committed fleet's aggregate pmin exceeds the expected thermal demand,
     the ED demand is augmented to sum(pmin) so the problem remains feasible.  The
@@ -320,8 +322,7 @@ def _evaluate(
         chrom.dispatch = dispatch
         chrom.reg_up, chrom.reg_down = _compute_regulation(chrom, generators)
         if chrom.reg_up < reg_up_req:
-            chrom.fitness = math.inf   # can't cover renewable drop — truly infeasible
-            stats.n_reg_infeasible += 1
+            stats.n_reg_infeasible += 1  # shortfall noted; chromosome still competes on cost
         else:
             stats.n_ed_feasible += 1
     except EDInfeasible:

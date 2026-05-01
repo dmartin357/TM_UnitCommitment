@@ -94,6 +94,7 @@ def solve_ed_piecewise_linear(
     generators: dict,
     demand: float,
     solver: str = "auto",
+    output_bounds: dict[str, tuple[float, float]] | None = None,
 ) -> tuple[float, dict[str, float]]:
     """
     Solve piecewise-linear ED for the given committed generators and demand.
@@ -104,6 +105,9 @@ def solve_ed_piecewise_linear(
     generators      : full generator dict {name: gen_data} from instance JSON.
     demand          : total MW demand for this time period.
     solver          : 'auto', 'gurobi', 'cplex', or 'cbc'.
+    output_bounds   : optional per-unit (lb, ub) tighter than [pmin, pmax].
+                      Used by Stage 2 to enforce ramp constraints from the
+                      previous period's dispatch.  None → standard [pmin, pmax].
 
     Returns
     -------
@@ -123,6 +127,11 @@ def solve_ed_piecewise_linear(
     for name in committed_names:
         pmin, pmax, segs = _parse_segments(generators[name])
         c0 = _fixed_cost_at_pmin(generators[name])
+        # Apply optional tighter bounds (ramp constraints from Stage 2)
+        if output_bounds and name in output_bounds:
+            lb, ub = output_bounds[name]
+            pmin = max(pmin, lb)
+            pmax = min(pmax, ub)
         gen_params[name] = {"pmin": pmin, "pmax": pmax, "segs": segs, "c0": c0}
         total_pmin += pmin
         total_pmax += pmax
@@ -194,14 +203,22 @@ def _build_model(
     # Variables: delta_{name, k} = incremental output on segment k
     m.delta = pyo.Var(m.GK, within=pyo.NonNegativeReals)
 
-    # Segment upper bounds
+    # Segment upper bounds — also cap total delta at (pmax - pmin) per unit
     def _seg_ub(model, name, k):
         dmw, _mc = gen_params[name]["segs"][k]
         return model.delta[name, k] <= dmw
 
     m.seg_ub = pyo.Constraint(m.GK, rule=_seg_ub)
 
-    # Demand balance
+    # Per-unit total-delta upper bound: sum(delta_k) <= pmax - pmin
+    # (pmax may have been tightened by output_bounds; this enforces it)
+    def _total_delta_ub(model, name):
+        cap = gen_params[name]["pmax"] - gen_params[name]["pmin"]
+        return sum(model.delta[name, k] for k in range(len(gen_params[name]["segs"]))) <= cap
+
+    m.total_delta_ub = pyo.Constraint(m.G, rule=_total_delta_ub)
+
+    # Demand balance — uses effective pmin per unit
     def _demand_bal(model):
         total = sum(
             gen_params[name]["pmin"]

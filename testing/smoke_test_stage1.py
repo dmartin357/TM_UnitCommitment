@@ -25,6 +25,7 @@ sys.path.insert(0, str(Path(__file__).parent.parent))
 from src.stage1_ga.config import GAConfig
 from src.stage1_ga.ga import run_stage1_ga
 from src.stage1_ga.parallel import AllPeriodsResult, run_all_periods
+from src.io.stage1_io import save_stage1_result
 
 # ── Logging setup ─────────────────────────────────────────────────────────────
 # force=True clears any handlers that Pyomo (or other imports) may have
@@ -48,6 +49,7 @@ INSTANCE_PATH = PGLIB_UC_ROOT / "rts_gmlc" / "2020-01-27.json"
 
 # ── Output ────────────────────────────────────────────────────────────────────
 RESULTS_DIR = Path(__file__).parent / "results"
+CACHE_DIR   = Path(__file__).parent / "cache"
 
 # ── Config ────────────────────────────────────────────────────────────────────
 config = GAConfig(
@@ -294,6 +296,11 @@ def run_all(inst: InstanceData) -> None:
 
     result.print_summary()
     export_csv(result, inst)
+
+    CACHE_DIR.mkdir(parents=True, exist_ok=True)
+    cache_path = CACHE_DIR / f"stage1_{INSTANCE_PATH.stem}.json"
+    save_stage1_result(result, cache_path)
+    print(f"  Stage 1 result cached → {cache_path}\n")
 
 
 def main() -> None:
