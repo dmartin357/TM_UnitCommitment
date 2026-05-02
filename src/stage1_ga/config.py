@@ -55,6 +55,10 @@ class GAConfig:
     max_wall_seconds: float = 300.0
     # Stop if best fitness has not improved for this many consecutive generations.
     stagnation_limit: int = 20
+    # Stop early when the best feasible chromosome's n_committed is within this
+    # many units of the pre-solve target.  Only active when a per-period
+    # target_n_committed is passed to run_stage1_ga().  0 = exact match required.
+    target_n_committed_tolerance: int = 2
 
     # ── ED solver ────────────────────────────────────────────────────────────
     # 'auto' → try Gurobi, then CPLEX, then CBC.

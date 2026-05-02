@@ -37,7 +37,7 @@ from .population import BoundedPopulation
 # ── Worker (runs in a subprocess) ────────────────────────────────────────────
 
 def _period_worker(
-    args: tuple[int, dict, float, GAConfig, int, float, float],
+    args: tuple[int, dict, float, GAConfig, int, float, float, int | None],
 ) -> tuple[int, BoundedPopulation, GAStats]:
     """
     Worker entry point — must be a module-level function so it is picklable
@@ -45,15 +45,16 @@ def _period_worker(
 
     Parameters (packed into a single tuple for executor.map compatibility)
     ----------
-    period_idx   : time period index (0-based)
-    generators   : {name: gen_data} thermal generator dict
-    demand       : expected thermal demand (MW) for this period
-    config       : GAConfig
-    seed         : integer seed for this period's RNG
-    reg_up_req   : MW of regulation-up the fleet must provide
-    reg_down_req : MW of regulation-down the fleet must provide
+    period_idx         : time period index (0-based)
+    generators         : {name: gen_data} thermal generator dict
+    demand             : expected thermal demand (MW) for this period
+    config             : GAConfig
+    seed               : integer seed for this period's RNG
+    reg_up_req         : MW of regulation-up the fleet must provide
+    reg_down_req       : MW of regulation-down the fleet must provide
+    target_n_committed : pre-solve commitment count target (None = disabled)
     """
-    period_idx, generators, demand, config, seed, reg_up_req, reg_down_req = args
+    period_idx, generators, demand, config, seed, reg_up_req, reg_down_req, target_n_committed = args
 
     # Silence all logging inside worker processes
     logging.disable(logging.CRITICAL)
@@ -67,6 +68,7 @@ def _period_worker(
         time_period=period_idx,
         reg_up_req=reg_up_req,
         reg_down_req=reg_down_req,
+        target_n_committed=target_n_committed,
     )
     return period_idx, pop, stats
 
@@ -86,47 +88,52 @@ class AllPeriodsResult:
         feasible_periods = sum(
             1 for s in self.period_stats if math.isfinite(s.best_fitness)
         )
-        total_ed = sum(s.n_ed_total for s in self.period_stats)
-        total_infeas = sum(s.n_ed_infeasible for s in self.period_stats)
+        total_ed          = sum(s.n_ed_total         for s in self.period_stats)
+        total_infeas      = sum(s.n_ed_infeasible    for s in self.period_stats)
+        total_pmax        = sum(s.n_pmax_infeasible  for s in self.period_stats)
+        total_pmin_aug    = sum(s.n_pmin_augmented   for s in self.period_stats)
+        total_solver_inf  = sum(s.n_ed_solver_infeasible for s in self.period_stats)
         best_fitnesses = [
             s.best_fitness for s in self.period_stats if math.isfinite(s.best_fitness)
         ]
 
-        print(f"\n{'=' * 70}")
+        print(f"\n{'=' * 90}")
         print(f"  Stage 1 — All Periods Summary  ({n} periods)")
-        print(f"{'=' * 70}")
+        print(f"{'=' * 90}")
         print(f"  Total wall time      : {self.total_wall_seconds:.1f}s")
         print(f"  Feasible periods     : {feasible_periods}/{n}")
-        print(f"  ED solves (total)    : {total_ed}"
-              f"   infeasible={total_infeas}"
-              f"  ({100*total_infeas/total_ed:.1f}%)" if total_ed else "")
+        if total_ed:
+            print(f"  ED solves (total)    : {total_ed}"
+                  f"  infeasible={total_infeas} ({100*total_infeas/total_ed:.1f}%)"
+                  f"  pmin_augmented={total_pmin_aug}")
+            if total_infeas:
+                print(f"    infeasible detail  : pmax_ceiling={total_pmax}"
+                      f"  solver={total_solver_inf}")
         if best_fitnesses:
             print(f"  Best fitness range   : "
                   f"{min(best_fitnesses):,.2f}  –  {max(best_fitnesses):,.2f}")
             print(f"  Total cost (sum)     : {sum(best_fitnesses):,.2f}")
         print()
-        print(f"  {'Period':<8}  {'Demand (MW)':<13}  {'Best Cost ($)':<18}"
-              f"  {'Committed':<12}  {'Reg Up':>10}  {'Reg Dn':>10}"
-              f"  {'Gen':<6}  {'Wall (s)':<10}  Stop")
-        print(f"  {'-'*8}  {'-'*13}  {'-'*18}  {'-'*12}  {'-'*10}  {'-'*10}"
-              f"  {'-'*6}  {'-'*10}  {'-'*20}")
+        print(f"  {'t':<6}  {'Demand':>9}  {'Best Cost ($)':>18}"
+              f"  {'Committed':>10}  {'pmax_inf':>9}  {'pmin_aug':>9}"
+              f"  {'reg_inf':>8}  {'Gen':>5}  {'Wall':>6}  Stop")
+        print(f"  {'-'*6}  {'-'*9}  {'-'*18}"
+              f"  {'-'*10}  {'-'*9}  {'-'*9}"
+              f"  {'-'*8}  {'-'*5}  {'-'*6}  {'-'*20}")
         for t, (s, pop, demand) in enumerate(
             zip(self.period_stats, self.populations, self.demand_values)
         ):
             best = pop.best
-            committed_str = (
-                f"{best.n_committed}/{len(best.bits)}" if best else "N/A"
-            )
+            committed_str = f"{best.n_committed}/{len(best.bits)}" if best else "N/A"
             best_str = (
                 f"{s.best_fitness:>18,.2f}" if math.isfinite(s.best_fitness)
                 else f"{'No solution':>18}"
             )
-            reg_up_str  = f"{best.reg_up:>10,.1f}"  if (best and best.reg_up  is not None) else f"{'N/A':>10}"
-            reg_dn_str  = f"{best.reg_down:>10,.1f}" if (best and best.reg_down is not None) else f"{'N/A':>10}"
-            print(f"  {t:<8}  {demand:<13.1f}  {best_str}"
-                  f"  {committed_str:<12}  {reg_up_str}  {reg_dn_str}"
-                  f"  {s.n_generations:<6}  {s.total_wall_seconds:<10.2f}  {s.stop_reason}")
-        print(f"{'=' * 70}\n", flush=True)
+            print(f"  {t:<6}  {demand:>9.1f}  {best_str}"
+                  f"  {committed_str:>10}  {s.n_pmax_infeasible:>9}"
+                  f"  {s.n_pmin_augmented:>9}  {s.n_reg_infeasible:>8}"
+                  f"  {s.n_generations:>5}  {s.total_wall_seconds:>6.1f}  {s.stop_reason}")
+        print(f"{'=' * 90}\n", flush=True)
 
 
 # ── Main entry point ──────────────────────────────────────────────────────────
@@ -140,22 +147,27 @@ def run_all_periods(
     show_progress: bool = True,
     reg_up_reqs: list[float] | None = None,
     reg_down_reqs: list[float] | None = None,
+    target_n_committed: list[int] | None = None,
 ) -> AllPeriodsResult:
     """
     Run Stage 1 GA for every time period in parallel.
 
     Parameters
     ----------
-    generators    : {name: gen_data} thermal generator dict.
-    demand_values : expected thermal demand (MW) per time period.
-    config        : GAConfig shared across all periods.
-    n_workers     : number of parallel worker processes.  Defaults to all CPUs.
-    base_seed     : period t uses seed = base_seed + t for reproducibility.
-    show_progress : print a one-liner to stdout as each period completes.
-    reg_up_reqs   : MW of regulation-up required per period (renewable drop risk).
-                    Defaults to zero for all periods if None.
-    reg_down_reqs : MW of regulation-down required per period (renewable surge risk).
-                    Defaults to zero for all periods if None.
+    generators         : {name: gen_data} thermal generator dict.
+    demand_values      : expected thermal demand (MW) per time period.
+    config             : GAConfig shared across all periods.
+    n_workers          : number of parallel worker processes.  Defaults to all CPUs.
+    base_seed          : period t uses seed = base_seed + t for reproducibility.
+    show_progress      : print a one-liner to stdout as each period completes.
+    reg_up_reqs        : MW of regulation-up required per period (renewable drop risk).
+                         Defaults to zero for all periods if None.
+    reg_down_reqs      : MW of regulation-down required per period (renewable surge risk).
+                         Defaults to zero for all periods if None.
+    target_n_committed : Pre-solve target commitment count per period.  When provided,
+                         each period's GA stops early once its best feasible chromosome
+                         is within config.target_n_committed_tolerance units of the target.
+                         Pass None to disable this stopping criterion.
 
     Returns
     -------
@@ -167,9 +179,10 @@ def run_all_periods(
 
     _reg_up   = reg_up_reqs   if reg_up_reqs   is not None else [0.0] * n_periods
     _reg_down = reg_down_reqs if reg_down_reqs is not None else [0.0] * n_periods
+    _targets  = target_n_committed if target_n_committed is not None else [None] * n_periods
 
     worker_args = [
-        (t, generators, demand_values[t], config, base_seed + t, _reg_up[t], _reg_down[t])
+        (t, generators, demand_values[t], config, base_seed + t, _reg_up[t], _reg_down[t], _targets[t])
         for t in range(n_periods)
     ]
 

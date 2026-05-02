@@ -30,10 +30,9 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
 from src.io.stage1_io import load_stage1_result, save_stage1_result
-from src.stage1_ga.config import GAConfig
 from src.stage1_ga.parallel import AllPeriodsResult, run_all_periods
-from src.stage2_graph.config import GraphBuilderConfig
 from src.stage2_graph.graph_builder import build_graph
+from testing.control_panel import CURRENT
 
 # ── Logging ───────────────────────────────────────────────────────────────────
 logging.basicConfig(
@@ -44,38 +43,11 @@ logging.basicConfig(
     force=True,
 )
 
-# ── Paths ─────────────────────────────────────────────────────────────────────
-PGLIB_UC_ROOT      = Path("C:/gitrepos/power-grid-lib/pglib-uc")
-INSTANCE_PATH      = PGLIB_UC_ROOT / "rts_gmlc" / "2020-01-27.json"
-STAGE1_RESULT_PATH = Path(__file__).parent.parent / "output" / "stage1_rts_gmlc_2020-01-27.json"
-
-# ── Mode ──────────────────────────────────────────────────────────────────────
-MODE = "load_or_run"   # 'load_or_run' | 'run_and_save' | 'load_only'
-
-# ── Stage 1 config (used only when Stage 1 is run) ───────────────────────────
-# Keep in sync with smoke_test_stage1.py so the cached result is comparable.
-STAGE1_CONFIG = GAConfig(
-    population_size=50,
-    initial_sample_size=30,
-    sort_attribute="power_output_maximum",
-    sort_ascending=False,
-    location_dist_type="uniform",
-    crossover_operator="single_point",
-    mutation_rate=0.02,
-    max_generations=50,
-    max_wall_seconds=120.0,
-    stagnation_limit=10,
-    solver="auto",
-)
-STAGE1_N_WORKERS = None   # None → all logical CPUs
-
-# ── Stage 2 config ────────────────────────────────────────────────────────────
-STAGE2_CONFIG = GraphBuilderConfig(
-    enable_unit_rectification=True,
-    rectification_multiplier=2.0,
-    enable_net_adjustment_check=False,   # disabled to observe its impact
-    net_adjustment_tolerance=0.05,
-)
+# ── Settings from control panel ───────────────────────────────────────────────
+INSTANCE_PATH      = CURRENT.instance_path
+STAGE1_RESULT_PATH = Path(__file__).parent / "cache" / f"stage1_{CURRENT.instance_path.stem}.json"
+MODE               = CURRENT.stage2_graph_mode   # 'load_or_run' | 'run_and_save' | 'load_only'
+STAGE1_N_WORKERS   = CURRENT.stage1_n_workers
 
 
 # ── Instance loader ───────────────────────────────────────────────────────────
@@ -109,9 +81,9 @@ def run_and_save_stage1(thermal: dict, demand_values: list[float]) -> AllPeriods
     result = run_all_periods(
         generators=thermal,
         demand_values=demand_values,
-        config=STAGE1_CONFIG,
+        config=CURRENT.stage1,
         n_workers=STAGE1_N_WORKERS,
-        base_seed=42,
+        base_seed=CURRENT.rng_seed,
         show_progress=True,
     )
     result.print_summary()
@@ -235,7 +207,7 @@ def main() -> None:
         populations=result.populations,
         generators=thermal,
         demand_values=result.demand_values,
-        config=STAGE2_CONFIG,
+        config=CURRENT.stage2_graph,
     )
 
     stats.print_summary()

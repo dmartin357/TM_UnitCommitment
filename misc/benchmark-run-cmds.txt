@@ -1,0 +1,3 @@
+cd C:\gitrepos\power-grid-lib\pglib-uc
+
+python uc_model.py C:\gitrepos\power-grid-lib\pglib-uc\rts_gmlc\2020-01-27.json

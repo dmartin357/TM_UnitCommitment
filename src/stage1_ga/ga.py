@@ -11,6 +11,9 @@ Stopping criteria (first to trigger wins):
   - max_generations reached
   - max_wall_seconds elapsed (0 = disabled)
   - stagnation_limit consecutive generations without improvement to best fitness
+  - target_n_committed met: best feasible chromosome is within
+    config.target_n_committed_tolerance units of the pre-solve target
+    (only active when target_n_committed is passed to run_stage1_ga)
 
 All three are currently placeholders with simple implementations; refine as needed.
 """
@@ -53,8 +56,13 @@ class GAStats:
 
     # ED outcomes
     n_ed_feasible: int = 0          # ED returned a finite cost
-    n_ed_infeasible: int = 0        # ED raised EDInfeasible
     n_reg_infeasible: int = 0       # ED feasible but failed reg up/down requirement
+
+    # Infeasibility breakdown (mutually exclusive; sum = total infeasible)
+    n_pmax_infeasible: int = 0      # sum(pmax) < demand  — under-committed, ceiling below demand
+    n_pmin_augmented:  int = 0      # sum(pmin) > demand  — over-committed; demand raised to pmin floor
+                                    #   (these are still solved; renewable_loss records the curtailment)
+    n_ed_solver_infeasible: int = 0 # solver returned infeasible despite passing pmax pre-screen
 
     # Per-generation timing (seconds)
     gen_wall_times: list[float] = field(default_factory=list)
@@ -68,8 +76,12 @@ class GAStats:
     # ── Derived properties ────────────────────────────────────────────────────
 
     @property
+    def n_ed_infeasible(self) -> int:
+        return self.n_pmax_infeasible + self.n_ed_solver_infeasible
+
+    @property
     def n_ed_total(self) -> int:
-        return self.n_ed_feasible + self.n_ed_infeasible + self.n_reg_infeasible
+        return self.n_ed_feasible + self.n_ed_infeasible + self.n_reg_infeasible + self.n_pmin_augmented
 
     @property
     def mean_gen_wall_seconds(self) -> float:
@@ -106,8 +118,14 @@ class GAStats:
         print(f"  Duplicates skipped  : {self.n_duplicates_skipped}")
         print(f"  ED solves (total)   : {self.n_ed_total}"
               f"  feasible={self.n_ed_feasible}"
-              f"  ed_infeasible={self.n_ed_infeasible}"
-              f"  reg_infeasible={self.n_reg_infeasible}")
+              f"  reg_infeasible={self.n_reg_infeasible}"
+              f"  infeasible={self.n_ed_infeasible}")
+        if self.n_ed_infeasible > 0:
+            print(f"    infeasible detail  : pmax_ceiling={self.n_pmax_infeasible}"
+                  f"  solver={self.n_ed_solver_infeasible}")
+        if self.n_pmin_augmented > 0:
+            print(f"    pmin_augmented     : {self.n_pmin_augmented}"
+                  f"  (over-committed; demand raised to pmin floor, renewables curtailed)")
         if self.n_ed_total > 0:
             infeas_pct = 100.0 * self.n_ed_infeasible / self.n_ed_total
             print(f"  Infeasibility rate  : {infeas_pct:.1f}%")
@@ -127,19 +145,23 @@ def run_stage1_ga(
     time_period: int | None = None,
     reg_up_req: float = 0.0,
     reg_down_req: float = 0.0,
+    target_n_committed: int | None = None,
 ) -> tuple[BoundedPopulation, GAStats]:
     """
     Run the Stage 1 GA for a single time period.
 
     Parameters
     ----------
-    generators  : {name: gen_data} from instance JSON (thermal generators only).
-    demand      : expected thermal MW demand for this time period.
-    config      : GAConfig instance.
-    rng         : NumPy random Generator (a new one is created if None).
-    time_period : Optional period index, used only for logging labels.
-    reg_up_req  : MW of regulation-up the committed fleet must provide (renewable drop risk).
-    reg_down_req: MW of regulation-down the committed fleet must provide (renewable surge risk).
+    generators         : {name: gen_data} from instance JSON (thermal generators only).
+    demand             : expected thermal MW demand for this time period.
+    config             : GAConfig instance.
+    rng                : NumPy random Generator (a new one is created if None).
+    time_period        : Optional period index, used only for logging labels.
+    reg_up_req         : MW of regulation-up the committed fleet must provide (renewable drop risk).
+    reg_down_req       : MW of regulation-down the committed fleet must provide (renewable surge risk).
+    target_n_committed : Pre-solve target commitment count for this period.  When provided,
+                         the GA stops early once the best feasible chromosome is within
+                         config.target_n_committed_tolerance units of this target.
 
     Returns
     -------
@@ -204,7 +226,9 @@ def run_stage1_ga(
     stats.fitness_history.append((0, best_fitness))
 
     while True:
-        stop, reason = _check_stop(generation, stagnation_count, loop_start, config)
+        stop, reason = _check_stop(
+            generation, stagnation_count, loop_start, config, pop, target_n_committed
+        )
         if stop:
             stats.stop_reason = reason
             break
@@ -303,13 +327,28 @@ def _evaluate(
     surplus (renewable_loss) represents renewable energy that must be curtailed to
     accommodate the thermal minimum-generation floor.
     """
-    # Augment demand to committed pmin if necessary
+    # Augment demand to committed pmin if necessary (over-committed case)
     committed_pmin = sum(
         float(generators[name].get("power_output_minimum", 0.0))
         for name in chrom.committed
     )
     effective_demand = max(demand, committed_pmin)
     chrom.renewable_loss = effective_demand - demand   # 0 when no augmentation needed
+    if chrom.renewable_loss > 1e-6:
+        stats.n_pmin_augmented += 1   # over-committed; pmin floor above thermal demand
+
+    # Fast pmax pre-screen: skip ED solve when committed fleet can't reach demand (under-committed)
+    committed_pmax = sum(
+        float(generators[name].get("power_output_maximum", 0.0))
+        for name in chrom.committed
+    )
+    if committed_pmax < effective_demand - 1e-6:
+        chrom.fitness  = math.inf
+        chrom.dispatch = None
+        chrom.reg_up   = None
+        chrom.reg_down = None
+        stats.n_pmax_infeasible += 1
+        return
 
     try:
         cost, dispatch = solve_ed_piecewise_linear(
@@ -330,7 +369,7 @@ def _evaluate(
         chrom.dispatch = None
         chrom.reg_up   = None
         chrom.reg_down = None
-        stats.n_ed_infeasible += 1
+        stats.n_ed_solver_infeasible += 1
 
 
 def _compute_regulation(
@@ -380,6 +419,8 @@ def _check_stop(
     stagnation_count: int,
     loop_start: float,
     config: GAConfig,
+    pop: BoundedPopulation,
+    target_n_committed: int | None = None,
 ) -> tuple[bool, str]:
     """Return (should_stop, reason_string)."""
     if generation >= config.max_generations:
@@ -392,5 +433,16 @@ def _check_stop(
 
     if stagnation_count >= config.stagnation_limit:
         return True, f"stagnation={stagnation_count} generations"
+
+    if target_n_committed is not None:
+        best = pop.best
+        if best is not None and best.is_feasible():
+            delta = abs(best.n_committed - target_n_committed)
+            if delta <= config.target_n_committed_tolerance:
+                return True, (
+                    f"target_n_committed={target_n_committed}"
+                    f"  best={best.n_committed}"
+                    f"  delta={delta}"
+                )
 
     return False, ""

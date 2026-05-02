@@ -1,0 +1,35 @@
+Initial Population Generation:
+
+During initial population generation, the algorithm will start with the given time 0. From there, a configurable number of candidate time t+1 solutions will be generated via 
+cutting units until stopping criteria is met. Once the stopping criteria is met, then an two period economic dispatch run will be conducted consisting of the current time period
+t and the candidate t+1 solution. The initial population generated via cutting for time period t=1 will form the base candidates from which the entire population will be generated. 
+Once the t=1 group of candidates is generated, a candidate will be selected to start generation a full UC candidate solution. To do this, any violations will be corrected and then 
+Economic Dispatch will be run, with power minimum and maximum constrains corrected to account for inter-period ramping constraints. The winning solution from the group will be that
+solution that is the preferred combination of the most economical and largest regulation up and regulation down range. This combination will be judged based off of weighting of the
+two categories, for example if economics and regulation range are each weighted 0.5, then a solution that ranks 2nd in economics and 3rd in regulation range would out perform a 
+solution that ranks 1st in economics but last in regulation range. Then the winning solution will become the base for the next time period, where the process will be repeated, 
+i.e. the new t+1 group of candidates will be generated, violates corrected, economic dispatch run, and then all potential solutions evaluated. This process will continue throughout
+all time periods until a full UC solution is reached. This process would generate one candidate out of the initial population.
+
+To generate the others, the algorithm will return to the t=1 group of candidates to select one that hasn't been tried to go through all time periods to generate another candidate. 
+This process will continue until the target number of candidate solutions is reached for the inital population.
+
+So for the t=1 candidates I want this to act nearly identically to the current stage 1 that we have.
+
+I want a few things to be different though in that since we're moving sequentially from time period 0 to the end of the time horizon we have information about the past. I want to 
+start by indentifying a demand target for the time period in question by taking the overall demand for the time period, and subtracting the "deterministic" must runs. These are going
+to be essentially hydroelectric units and renewable units that we know are relatively cheap and will typically be scheduled to their max potential via economic dispatch. After demand
+is identified for the time period, thermal units will be identified that are under constraint for the new time period in question. These units are just going to be indentified so 
+that they aren't a part of the cutting process. Once these are identified, units will be uniformly selected for cutting from the set of thermal units not under constraints. Cutting
+from this set will continue until a pmax violation occurs. Once this occurs, then the units that were't cut along with all of the must runs and units under constraint will be
+a part of the economic dispatch run.
+
+1. Absolutely, think about the correction we are doing in our current stage 2.
+
+2. The thermal target demand will be the overall demand minus the deterministic must runs i.e. the hydro and renewable units. The constrained thermal units will obviously count towards the CDF when checking pmax CDF values. Once the thermal target demand is violated then the cutting will be over.
+
+3. In reality it is a single period ED with the pmin and pmax constraints for the units handling the ramping constraints. Exactly the role that ED plays in our current stage 2.
+
+4. The hydro units in this instace are esentially fixed purely because their pmin equals their pmax. With renewables (wind and PV) though this is where we are going to include them in the ED problem constrained by their respecive pmin and pmax values for the current time periods. If we need to assume a cost then lest pick an arbitrarily low value such as $0.01 per MWh. 
+
+5. Yes the cutting will be very similar to our current stage 1.

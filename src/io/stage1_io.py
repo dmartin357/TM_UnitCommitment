@@ -209,4 +209,9 @@ def _deserialize_stats(data: dict) -> GAStats:
         (int(entry[0]), float(entry[1]))
         for entry in data.get("fitness_history", [])
     ]
+    # n_ed_infeasible is now a computed property (sum of pmax + solver failures).
+    # Old cache files stored it as a plain field — migrate to the split fields.
+    old_infeas = data.pop("n_ed_infeasible", None)
+    if old_infeas is not None and "n_pmax_infeasible" not in data:
+        data["n_pmax_infeasible"] = old_infeas   # conservatively attribute to pmax
     return GAStats(**data)

@@ -1,5 +1,5 @@
 """
-Min up/down time repair for Stage 2.
+Commitment repair for Stage 2.
 
 Given a candidate chromosome (bit vector) for period t+1 and the fleet state
 from period t, force any commitment violations:
@@ -9,6 +9,10 @@ from period t, force any commitment violations:
 
   - Unit was OFF in t and has not yet satisfied time_down_minimum
       → must remain OFF in t+1 (cannot start up yet)
+
+  - Unit was ON in t with dispatch > ramp_shutdown_limit
+      → must remain ON in t+1 (output too high to shut down in one period;
+        the unit must ramp down to ≤ ramp_shutdown_limit before it can go offline)
 
 Returns a new bit array (never modifies the input).
 """
@@ -27,7 +31,7 @@ def repair_min_updown(
     generators: dict,
 ) -> np.ndarray:
     """
-    Return a copy of bits with min up/down time violations corrected.
+    Return a copy of bits with commitment constraint violations corrected.
 
     Parameters
     ----------
@@ -47,9 +51,19 @@ def repair_min_updown(
         min_up = int(gen.get("time_up_minimum",   0))
         min_dn = int(gen.get("time_down_minimum", 0))
 
-        if state.committed and state.time_in_state < min_up:
-            bits[i] = 1   # must stay on — min up time not yet met
-        elif not state.committed and state.time_in_state < min_dn:
-            bits[i] = 0   # must stay off — min down time not yet met
+        if state.committed:
+            if state.time_in_state < min_up:
+                bits[i] = 1   # must stay on — min up time not yet met
+            elif bits[i] == 0:
+                # Shutdown ramp check: unit can only go offline if its previous
+                # dispatch is within one ramp_shutdown_limit step of zero.
+                # If dispatch_t > ramp_shutdown_limit, shutting down in t+1
+                # would require an instantaneous drop larger than the limit allows.
+                sd_ramp = float(gen.get("ramp_shutdown_limit", float("inf")))
+                if state.dispatch > sd_ramp + 1e-6:
+                    bits[i] = 1   # must stay on — dispatch too high to shut down
+        else:
+            if state.time_in_state < min_dn:
+                bits[i] = 0   # must stay off — min down time not yet met
 
     return bits

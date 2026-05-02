@@ -22,10 +22,11 @@ import numpy as np
 # Allow running from repo root without installing the package
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
-from src.stage1_ga.config import GAConfig
 from src.stage1_ga.ga import run_stage1_ga
 from src.stage1_ga.parallel import AllPeriodsResult, run_all_periods
 from src.io.stage1_io import save_stage1_result
+from src.pre_solve_stage.parallel import run_all_periods as run_pre_solve_all_periods
+from testing.control_panel import CURRENT
 
 # ── Logging setup ─────────────────────────────────────────────────────────────
 # force=True clears any handlers that Pyomo (or other imports) may have
@@ -38,33 +39,15 @@ logging.basicConfig(
     force=True,
 )
 
-# ── Run mode ──────────────────────────────────────────────────────────────────
-MODE = "all"          # 'single' or 'all'
-TIME_PERIOD_IDX = 0   # used only in 'single' mode
-N_WORKERS = None      # None → use all logical CPUs; set an int to cap
-
-# ── Instance ──────────────────────────────────────────────────────────────────
-PGLIB_UC_ROOT = Path("C:/gitrepos/power-grid-lib/pglib-uc")
-INSTANCE_PATH = PGLIB_UC_ROOT / "rts_gmlc" / "2020-01-27.json"
+# ── Settings from control panel ───────────────────────────────────────────────
+INSTANCE_PATH   = CURRENT.instance_path
+MODE            = CURRENT.stage1_mode          # 'single' or 'all'
+TIME_PERIOD_IDX = CURRENT.stage1_single_period # used only in 'single' mode
+N_WORKERS       = CURRENT.stage1_n_workers     # None → all logical CPUs
 
 # ── Output ────────────────────────────────────────────────────────────────────
 RESULTS_DIR = Path(__file__).parent / "results"
 CACHE_DIR   = Path(__file__).parent / "cache"
-
-# ── Config ────────────────────────────────────────────────────────────────────
-config = GAConfig(
-    population_size=50,
-    initial_sample_size=30,
-    sort_attribute="power_output_maximum",
-    sort_ascending=False,
-    location_dist_type="uniform",  # equal probability per position (random cuts)
-    crossover_operator="single_point",
-    mutation_rate=0.02,
-    max_generations=50,
-    max_wall_seconds=120.0,
-    stagnation_limit=10,
-    solver="auto",
-)
 
 
 class InstanceData:
@@ -174,11 +157,11 @@ def run_single(inst: InstanceData) -> None:
           f"  total_demand={total:.1f} MW  thermal_demand={demand:.1f} MW\n",
           flush=True)
 
-    rng = np.random.default_rng(seed=42)
+    rng = np.random.default_rng(seed=CURRENT.rng_seed)
     pop, stats = run_stage1_ga(
         generators=inst.thermal,
         demand=demand,
-        config=config,
+        config=CURRENT.stage1,
         rng=rng,
         time_period=TIME_PERIOD_IDX,
         reg_up_req=inst.renewable_reg_up[TIME_PERIOD_IDX],
@@ -237,9 +220,11 @@ def export_csv(result: AllPeriodsResult, inst: InstanceData) -> Path:
             "reg_down_margin_mw",
             # Renewable curtailment due to thermal pmin floor
             "renewable_loss_mw",
-            # GA run metadata
+            # GA run metadata — infeasibility breakdown
             "n_ed_feasible",
-            "n_ed_infeasible",
+            "n_pmax_infeasible",   # under-committed: sum(pmax) < demand
+            "n_pmin_augmented",    # over-committed: sum(pmin) > demand, demand raised
+            "n_ed_solver_infeasible",  # passed pmax screen but solver still failed
             "n_reg_infeasible",
             "n_generations",
             "stop_reason",
@@ -268,7 +253,9 @@ def export_csv(result: AllPeriodsResult, inst: InstanceData) -> Path:
                 f"{chrom_rdn - rdn_req:.4f}" if chrom_rdn is not None else "",
                 f"{best.renewable_loss:.4f}" if (best and best.renewable_loss is not None) else "",
                 s.n_ed_feasible,
-                s.n_ed_infeasible,
+                s.n_pmax_infeasible,
+                s.n_pmin_augmented,
+                s.n_ed_solver_infeasible,
                 s.n_reg_infeasible,
                 s.n_generations,
                 s.stop_reason,
@@ -278,20 +265,52 @@ def export_csv(result: AllPeriodsResult, inst: InstanceData) -> Path:
     return out_path
 
 
+def run_pre_solve(inst: InstanceData) -> list[int] | None:
+    """Run the pre-solve stage and return per-period n_committed targets, or None if disabled."""
+    if not CURRENT.stage1_use_presolve_targets:
+        print("Pre-solve target guidance disabled — skipping pre-solve.\n", flush=True)
+        return None
+
+    n_periods = len(inst.thermal_demand)
+    print(f"Running pre-solve ({CURRENT.pre_solve.n_samples:,} samples/period, "
+          f"{n_periods} periods)…\n", flush=True)
+
+    pre_result = run_pre_solve_all_periods(
+        generators=inst.thermal,
+        thermal_demand_values=inst.thermal_demand,
+        reg_up_req_values=inst.renewable_reg_up,
+        reg_down_req_values=inst.renewable_reg_down,
+        config=CURRENT.pre_solve,
+        n_workers=N_WORKERS,
+        base_seed=CURRENT.rng_seed,
+        show_progress=True,
+    )
+    pre_result.print_summary()
+    targets = pre_result.target_n_committed()
+    print(f"Pre-solve targets: min={min(targets)}  max={max(targets)}"
+          f"  avg={sum(targets)/len(targets):.1f}\n", flush=True)
+    return targets
+
+
 def run_all(inst: InstanceData) -> None:
     n_periods = len(inst.thermal_demand)
+
+    # ── Pre-solve (optional) ──────────────────────────────────────────────────
+    targets = run_pre_solve(inst)
+
     print(f"Running all {n_periods} periods in parallel  "
           f"(n_workers={N_WORKERS or 'auto'})\n", flush=True)
 
     result = run_all_periods(
         generators=inst.thermal,
         demand_values=inst.thermal_demand,
-        config=config,
+        config=CURRENT.stage1,
         n_workers=N_WORKERS,
-        base_seed=42,
+        base_seed=CURRENT.rng_seed,
         show_progress=True,
         reg_up_reqs=inst.renewable_reg_up,
         reg_down_reqs=inst.renewable_reg_down,
+        target_n_committed=targets,
     )
 
     result.print_summary()
