@@ -4,7 +4,7 @@
 
 This is a master's thesis project in electrical engineering developing a novel **multi-stage heuristic algorithm for Unit Commitment (UC)**. The goal is to produce a computationally efficient heuristic that achieves competitive solution quality compared to full MILP solvers (CBC, Gurobi, CPLEX), targeting a **2–5% optimality gap in under 30 minutes** on industrial-scale instances.
 
-The benchmark reference is a CBC 2.10.12 solution on the **power-grid-lib FERC UC test case** (RTO scale), which achieved a **0.66% optimality gap ($41,519,481 objective) after 35.2 hours**. That is the bar we are building toward, not replicating — the point is to get close much faster.
+The benchmark reference is a CBC 2.10.12 solution on the **power-grid-lib RTS-GMLC UC test case** (instance `rts_gmlc/2020-01-27.json`, 48 periods, 24-hour horizon), which achieved a **0.66% optimality gap ($41,519,481 objective) after 35.2 hours**. That is the bar we are building toward, not replicating — the point is to get close much faster.
 
 This is a **research script/notebook project**, not a production package. Prioritize clarity, modularity, and reproducibility over software engineering polish.
 
@@ -12,91 +12,106 @@ This is a **research script/notebook project**, not a production package. Priori
 
 ## Current Implementation Status
 
-| Stage | Status | Notes |
+| Component | Status | Notes |
 |---|---|---|
-| Stage 1 — GA (per time period) | **Complete** | Smoke-tested on FERC 2020-01-27 (48 periods, ~420s wall time) |
-| Stage 2 — Graph Builder | **Complete (stub)** | Rectification=2×, net adj tolerance=±5% demand, startup cost first-tier stub |
-| Stage 3 — Shortest Path | Not started | Depends on Stage 2 output |
+| Stage 1 — GA (per time period) | **Complete** | Smoke-tested on RTS-GMLC 2020-01-27 (48 periods) |
+| Stage 2 — GA Forward Pass | **Complete** | Greedy forward pass using Stage 1 populations |
+| Stage 2 — Graph Builder | **Stub** | Rectification=2×, net adj tolerance=±5% demand |
+| Stage 3 — Shortest Path | Not started | Depends on Graph Builder output |
 | Stage 4 — Min Up/Down Time | Not started | Depends on Stage 3 output |
+| **GA v2 — Initial Population** | **In progress** | New forward-pass architecture (see below) |
 
-**Stage 1 implementation lives in** `src/stage1_ga/`. Key files:
-- `ga.py` — `run_stage1_ga()` single-period entry point
-- `parallel.py` — `run_all_periods()` ProcessPoolExecutor runner
-- `ed/piecewise_linear.py` — Pyomo piecewise-linear ED (fitness function)
-- `initial_population/generator.py` — iterative CDF-cut seed sampling
-- `population.py` — `BoundedPopulation` (sorted, bounded, SHA-256 dedup)
-- `chromosome.py` — binary commitment vector
-- `operators/crossover.py` — single-point crossover
-- `operators/mutation.py` — bit-flip mutation
+### GA v2 is the active development branch
+
+The project has pivoted from the original 4-stage graph-based architecture toward a more classical genetic algorithm (GA v2) that operates as a **sequential forward-pass population generator**. The original Stage 1/2 code is preserved and still works; GA v2 is a parallel development path intended to replace it as the primary solution method.
 
 ---
 
 ## Algorithm Architecture
 
-The algorithm consists of four stages. Each stage decomposes a distinct class of UC constraints:
+### Original Architecture (Stages 1–4) — Preserved, not actively developed
 
-### Stage 1 — Genetic Algorithm (Per Time Period)
-- Runs **independently for each time period** in the UC horizon
-- Handles **network constraints** (if any) and **min/max generation limits**
-- Runs **Economic Dispatch (ED)** as the fitness evaluation subproblem (no network), or **OPF** (AC/DC) if network constraints are active
-  - ED formulation is data-driven: the cost model used (piecewise linear, quadratic, etc.) is determined by the instance data. For the FERC benchmark, costs are piecewise linear (`piecewise_production` field in thermal generator data)
-- Produces a **diverse, bounded population of chromosomes** per time period
-- Uses **multiple CDF/PDF proxies** (sorted lists across dimensions) for initial generation
-  - Cut group size distribution parameterized by renewable uncertainty (more uncertainty → smaller cuts → more units online → implicit reserves)
-  - Cut group location distribution parameterized by renewable uncertainty and CDF type (e.g., Max Power Output CDF biased toward beginning/middle under high uncertainty)
-- Uses **SHA hash-based duplicate detection** to avoid re-evaluating chromosomes
-- Tracks best and worst fitness per time period; bounded population discards worst when full
-- **No cross-period feedback** — temporal feasibility is entirely handled by Stage 2
+The original design decomposes UC constraints across four sequential stages:
 
-### Stage 2 — Graph Builder
-- Takes Stage 1 chromosome populations and builds a **directed graph connecting chromosomes between adjacent time periods**
-- Handles **ramping constraints** via a 4-level nested loop: time periods → chromosomes i → chromosomes i+1 → units
-- **Rectification logic**: if a ramp violation is within ~2x the unit ramp limit, attempts to adjust power levels rather than immediately discarding the edge
-- Tracks **net power adjustments** across all units; discards edge if total net adjustment exceeds a configurable limit (instance-specific parameter passed at runtime)
-- Detects and adds **startup/shutdown costs** to edge costs (attributed to the later time period)
-- **Edge cost = cost of target chromosome + startup/shutdown costs**
-- Goal: collapse N^M potential paths to a manageable subset by eliminating ramp-infeasible edges
+**Stage 1** runs an independent GA per time period to build diverse chromosome populations (binary commitment vectors), evaluated by piecewise-linear Economic Dispatch. No cross-period constraints.
 
-### Stage 3 — Shortest Path
-- Takes the Stage 2 directed graph and finds **lowest-cost complete paths** from first to last time period
-- Algorithm candidates: **Dijkstra** (non-negative edge weights, standard case) or **Bellman-Ford** (if negative weights arise)
-- Implemented using **NetworkX**
-- Should return a **ranked list of top-K paths** (not just single best) to support Stage 4
+**Stage 2 (GA forward pass)** runs a greedy sequential forward pass: for each period, takes the Stage 1 population as candidates, repairs min up/down time violations, runs single-period ED with ramp-adjusted bounds, and selects the first feasible candidate as the winner.
 
-### Stage 4 — Minimum Up/Down Time Enforcement (NOT YET IMPLEMENTED)
-- Post-processes paths from Stage 3 to handle **minimum up time and minimum down time constraints**
-- These are the **primary source of combinatorial difficulty** in UC (confirmed by CBC run: TwoMir and Gomory cuts dominated, pointing to min up/down time and ramp constraints)
-- Planned approach: hybrid of path filtering and local repair
-  - Min down time violations: local look-back, handle via targeted edge re-costing or repair
-  - Min up time violations: forward-looking, handle via local re-routing through Stage 2 graph over violated window
-- Do NOT expect a single repair pass to be sufficient — may require iteration across top-K paths from Stage 3
+**Stage 2 (Graph Builder)** builds a directed graph connecting Stage 1 chromosomes between adjacent periods using rectification logic to handle near-feasible ramp violations.
+
+**Stage 3** finds lowest-cost paths through the Stage 2 graph using Dijkstra/NetworkX.
+
+**Stage 4** post-processes paths to enforce min up/down time constraints via repair/re-routing.
+
+---
+
+### GA v2 — Active Development: Forward-Pass Population Generator
+
+GA v2 is a **classical-style GA** that generates an initial population of **complete UC solutions** (full T-period schedules), rather than per-period chromosome pools. Each solution is produced by a greedy sequential forward pass that respects temporal constraints from the start. The population then feeds into a mating/crossover stage (not yet implemented).
+
+#### GA v2 Initial Population Generation
+
+**Overall structure:** Generate N complete T-period UC solutions. Each solution is seeded by a distinct period-1 commitment set; the forward pass then greedily builds the remaining periods.
+
+**Per-period algorithm (applied at each t = 1 … T−1):**
+
+1. **Identify deterministic must-runs.** Hydro generators have pmin = pmax and are treated as fixed dispatch (subtracted from demand before ED). Wind and solar are variable — included in the ED as optimization variables with time-varying bounds `[pmin[t], pmax[t]]` and a nominal cost of $0.01/MWh to keep them at the upper bound without degeneracy.
+
+2. **Compute thermal demand target.** `thermal_demand_target = total_demand[t] − hydro_fixed[t] − renewable_expected[t]` where `renewable_expected[t] = (pmin[t] + pmax[t]) / 2` summed over wind/solar. This target is used only for the pmax violation check during cutting.
+
+3. **Classify thermal units** (based on previous period's committed state + generator data):
+   - `constrained_ON`: must stay ON — unit was ON and min up time not yet satisfied, OR dispatch was above ramp_shutdown_limit (cannot drop to zero in one period), OR must_run = 1
+   - `constrained_OFF`: must stay OFF — unit was OFF and min down time not yet satisfied
+   - `free`: all other units — eligible for the cutting pool
+
+4. **Generate candidates via uniform random cutting.** Start with all free units committed (plus constrained_ON). Uniformly randomly shuffle the free pool and cut units one at a time. Stop when the next cut would cause `sum(pmax of remaining committed) < thermal_demand_target`. Each call to this procedure produces one candidate committed set.
+
+5. **Run single-period ED** for each candidate:
+   - Thermal units: piecewise-linear cost, bounds ramp-adjusted from previous period's dispatch (same ramp logic as Stage 2 — startup ramp for newly started units, up/down ramp limits for continuing units)
+   - Variable renewables: linear cost at $0.01/MWh, bounded by `[pmin[t], pmax[t]]`
+   - Hydro: subtracted from demand as fixed; not an optimization variable
+   - Demand balance: `sum(thermal dispatch) + sum(renewable dispatch) = total_demand[t] − hydro_fixed[t]`
+
+6. **Score candidates** on a weighted rank of two criteria:
+   - Economics rank: lower total cost = better (rank 1 = cheapest)
+   - Regulation range rank: higher `reg_up + reg_down` = better (rank 1 = most flexible); reg range computed from ramp-adjusted thermal bounds
+   - Composite score: `econ_weight × cost_rank + reg_weight × reg_rank` — lower is better
+
+7. **Select winner.** Candidate with best composite score advances. The winner's committed set and dispatch become the fleet state for the next period.
+
+**Building the initial population:**
+- Generate N t=1 candidates (cutting from t=0 initial state, respecting min up/down constraints from `unit_on_t0`, `time_up_t0`, `time_down_t0`)
+- Each t=1 candidate seeds one complete forward pass through all T periods
+- Only **complete solutions** (all periods successfully solved by ED) are eligible to be selected as the best; incomplete solutions are flagged in output
+
+**Next step (not yet implemented):** Crossover and mutation operators on the population of complete solutions to generate successive generations.
 
 ---
 
 ## Key Design Decisions & Rationale
 
-**Why decompose across stages?**
-Each stage handles a distinct constraint class, reducing the complexity that any single optimization step must handle simultaneously. This mirrors how MILP solvers decompose via LP relaxation + cuts + branching, but in a more explicit and controllable way.
+**Why pivot to GA v2 from the graph-based architecture?**
+The original Stage 1 + Stage 2 graph approach separates temporal and capacity constraints across stages, but this makes it hard to generate diverse, temporally-feasible solutions efficiently. GA v2 generates complete, ramp-feasible, min-up/down-feasible solutions from the start, which are much more useful as a GA population — crossover and mutation on complete solutions is well-defined, whereas crossover on per-period chromosome pools is not.
 
-**Why run Stage 1 independently per time period?**
-Simplifies the GA significantly. The GA only needs to find diverse, low-cost, network-feasible dispatch configurations — it does not need to worry about temporal transitions. Stage 2 handles all temporal reasoning.
+**Why include renewables in the ED rather than subtracting them as fixed?**
+The RTS-GMLC instance has wind/solar with `pmin[t] = 0` and `pmax[t] = time-varying forecast`. The CBC benchmark dispatches them as decision variables within those bounds, naturally pushing them to their upper bound since they have zero cost in the objective. GA v2 mirrors this: renewables enter the ED at $0.01/MWh, which makes them always fully dispatched up to forecast while keeping the LP numerically well-conditioned (no free variables).
+
+**Why use weighted rank scoring rather than just picking the cheapest candidate?**
+Pure cost minimization at each greedy step may produce schedules that are cheap locally but leave the fleet with no regulation headroom, making subsequent periods harder to solve. The weighted rank balances economics against flexibility, producing more robust solutions.
+
+**Why min up/down constraints from t=0?**
+The instance JSON provides `unit_on_t0`, `time_up_t0`, and `time_down_t0` for every thermal generator. These encode the initial fleet state and must be respected at t=1 — a unit that has been on for fewer periods than its minimum up time cannot shut down. GA v2 enforces this identically to Stage 2's repair logic.
 
 **Why hash-based duplicate detection in Stage 1?**
-The combinatorial chromosome space has significant overlap, especially in later GA generations. Avoiding re-evaluation of identical chromosomes saves ED/OPF subproblem solves, which are the computational bottleneck.
-
-**Why the rectification logic in Stage 2?**
-Purely discarding ramp-violating chromosome pairs would make the graph too sparse, potentially leaving Stage 3 with no feasible paths. Rectification preserves edges that are "close" to feasible, at the cost of small power adjustments.
-
-**Why top-K paths from Stage 3?**
-The CBC run showed a late improvement at node 1,552 from $41.88M to $41.52M — a qualitatively different commitment pattern, not a marginal tweak. This means the greedy shortest path may not survive Stage 4's min up/down time repair. Having K candidates gives Stage 4 fallback options.
+The combinatorial chromosome space has significant overlap, especially in later GA generations. Avoiding re-evaluation of identical chromosomes saves ED/OPF subproblem solves, which are the computational bottleneck. (This applies to Stage 1; GA v2 uses random cutting, which has low duplication probability.)
 
 ---
 
 ## Benchmark Context
 
-**Solver:** CBC 2.10.12 via Pyomo  
-**Instance:** power-grid-lib FERC UC test case (RTO scale, 24-hour horizon)  
-**Problem scale:** ~330k rows, ~312k columns, ~147k binary variables after presolve  
+**Solver:** CBC 2.10.12 via Pyomo
+**Instance:** power-grid-lib RTS-GMLC UC test case (`rts_gmlc/2020-01-27.json`), 24-hour horizon, 48 half-hour periods
+**Problem scale:** ~330k rows, ~312k columns, ~147k binary variables after presolve
 **Key results:**
 
 | Milestone | Objective Value | Wall Clock |
@@ -106,7 +121,7 @@ The CBC run showed a late improvement at node 1,552 from $41.88M to $41.52M — 
 | Best solution at termination | $41,519,481 | ~35.2h |
 | Lower bound at termination | $41,245,691 | — |
 
-**Final gap:** 0.66% (~$273k absolute)  
+**Final gap:** 0.66% (~$273k absolute)
 **Integrality gap (LP vs best integer):** ~1.87%
 
 **Key findings that inform heuristic design:**
@@ -116,6 +131,8 @@ The CBC run showed a late improvement at node 1,552 from $41.88M to $41.52M — 
 - Late improvement at node 1,552 ($41.88M → $41.52M) → need diversification, not just local refinement
 - LP relaxation solved in ~207s → target heuristic solve time is 1–10x this (~200s–2000s)
 
+**Renewable dispatch in CBC benchmark:** Wind and solar are dispatched as decision variables bounded by `[pmin[t], pmax[t]]` where `pmin[t] = 0` and `pmax[t]` is the time-varying forecast. Since renewables have no cost in the CBC objective, CBC dispatches them at their upper bound (full forecast) for all periods. Hydro has `pmin[t] = pmax[t]` (fixed output).
+
 **Heuristic target:** 2–5% optimality gap in under 30 minutes on instances of this scale.
 
 ---
@@ -123,29 +140,58 @@ The CBC run showed a late improvement at node 1,552 from $41.88M to $41.52M — 
 ## Directory Structure
 
 ```
-TM_UnitCommitment/                   # Repo root
-├── CLAUDE.md                        # This file
-├── PG_Lib_FERC_Instance/            # FERC benchmark instance (EDA + data)
-│   ├── Ferc_EDA_Interactive.ipynb   # Interactive EDA notebook
-│   ├── data/                        # Pre-extracted JSON instance data
-│   │   ├── demand.json
-│   │   ├── thermal_generators.json
-│   │   └── renewable_generators.json
-│   └── output/                      # EDA plots and exports
+TM_UnitCommitment/                    # Repo root
+├── CLAUDE.md                         # This file
+├── uc_model.py                       # CBC MILP benchmark solver (Pyomo)
+├── benchmarks/
+│   ├── convert_cbc_to_xlsx.py        # Converts CBC solution JSON → xlsx
+│   ├── cbc_solution.json             # CBC optimal solution (obj=$41,519,481)
+│   └── cbc_solution.xlsx             # CBC solution in expanded comparison format
+├── design_documents/                 # Drawio flowcharts for algorithm stages
+├── PG_Lib_FERC_Instance/             # RTS-GMLC instance EDA notebook + data
 ├── src/
-│   ├── stage1_ga/                   # Stage 1: Genetic Algorithm (complete)
-│   ├── stage2_graph/                # Stage 2: Graph Builder (stub complete)
-│   └── stage3_shortest_path/        # Stage 3: Shortest Path (not started)
-├── tests/                           # Unit tests (to be created)
-├── results/                         # Solver output, logs, result CSVs (to be created)
-└── notebooks/                       # Scratch/analysis notebooks (to be created)
+│   ├── ga_v2/                        # GA v2: forward-pass population generator (active)
+│   │   ├── config.py                 # GAv2Config dataclass
+│   │   ├── candidate.py              # PeriodCandidate, ForwardSolution
+│   │   ├── constraint_check.py       # classify_thermal_units (ON/OFF/free)
+│   │   ├── cutting.py                # classify_renewables, generate_cut_candidate
+│   │   ├── ed_single_period.py       # Pyomo ED: thermals + renewables
+│   │   ├── scoring.py                # weighted rank candidate selection
+│   │   ├── forward_pass.py           # build_forward_solution (one T-period solution)
+│   │   └── population.py             # generate_initial_population (N solutions)
+│   ├── stage1_ga/                    # Stage 1: per-period GA (complete, preserved)
+│   │   ├── ga.py                     # run_stage1_ga() single-period entry point
+│   │   ├── parallel.py               # run_all_periods() ProcessPoolExecutor runner
+│   │   ├── ed/piecewise_linear.py    # Pyomo piecewise-linear ED (fitness function)
+│   │   ├── initial_population/       # CDF-cut seed sampling
+│   │   ├── population.py             # BoundedPopulation (sorted, SHA-256 dedup)
+│   │   ├── chromosome.py             # binary commitment vector
+│   │   └── operators/                # crossover, mutation
+│   ├── stage2_ga/                    # Stage 2 GA forward pass (complete, preserved)
+│   │   ├── forward_pass.py           # run_stage2_forward_pass()
+│   │   ├── unit_state.py             # FleetState, UnitState, advance_fleet_state
+│   │   ├── repair.py                 # repair_min_updown (also used by GA v2)
+│   │   └── config.py
+│   ├── stage2_graph/                 # Stage 2 graph builder (stub, preserved)
+│   ├── pre_solve_stage/              # Monte Carlo pre-solve (n_committed targets)
+│   └── io/
+│       ├── stage1_io.py              # Stage 1 result JSON serialization
+│       └── xlsx_export.py            # Shared xlsx export (CBC + heuristic)
+├── testing/
+│   ├── control_panel.py              # Single source of truth for experiment params
+│   ├── smoke_test_ga_v2.py           # GA v2 smoke test (active)
+│   ├── smoke_test_stage1.py          # Stage 1 smoke test (preserved)
+│   ├── smoke_test_stage2_ga.py       # Stage 2 GA forward pass smoke test (preserved)
+│   ├── cache/                        # Cached Stage 1 JSON results
+│   └── results/                      # xlsx outputs, logs
+└── testing/control_panel.py          # Experiment config (instance, seeds, weights)
 ```
 
 ---
 
 ## Solver Preferences
 
-**For ED subproblem (Stage 1 fitness evaluation):**
+**For ED subproblem (all stages):**
 1. **Gurobi** (preferred — fastest)
 2. **CPLEX** (fallback)
 3. **CBC** (fallback if commercial solvers unavailable)
@@ -160,7 +206,7 @@ TM_UnitCommitment/                   # Repo root
 ## Environment
 
 - **Conda environment:** `power-systems` (Python 3.11.10)
-- **Key packages:** Pyomo 6.9.4, NetworkX 3.5, NumPy 1.26.4, SciPy 1.12.0, Pandas 2.3.1, Matplotlib 3.10.8, Plotly 6.6.0
+- **Key packages:** Pyomo 6.9.4, NetworkX 3.5, NumPy 1.26.4, SciPy 1.12.0, Pandas 2.3.1, Matplotlib 3.10.8, Plotly 6.6.0, openpyxl (xlsx export)
 - **Solvers available:** CBC 2.10.12, IPOPT 3.14.19, Gurobi (external), CPLEX (external)
 - **IDE:** VSCode with Claude Code extension
 - **Notable packages:** EGRET 0.5.6 (Sandia power systems toolkit with UC/ED formulations built on Pyomo — worth exploring for subproblem formulations)
@@ -170,19 +216,20 @@ TM_UnitCommitment/                   # Repo root
 ## Development Approach
 
 - **Format:** Research scripts and Jupyter notebooks (not a production package)
-- **Start small:** Validate algorithm on a small power-grid-lib UC instance before scaling to FERC RTO case
-- **EDA first:** Replicate FERC EDA notebook for whichever small instance is selected
-- **Test incrementally:** Each stage should be testable independently before integration
-- **Commit frequently:** GitHub is used to sync state between VSCode development sessions and the Claude.ai chat project used for design discussions
+- **Test incrementally:** Each stage should be testable independently before integration; each has its own smoke test
+- **Separate test paths:** GA v2 (`smoke_test_ga_v2.py`) is completely independent from Stage 1/2 tests — the two development paths can coexist
+- **Control panel:** `testing/control_panel.py` is the single file to edit for experiment parameters; smoke tests import from it
+- **Commit frequently:** GitHub is used to sync state between VSCode development sessions
 
 ---
 
 ## Design Documents
 
-Drawio flowchart diagrams for the overall algorithm and individual stages live in `design_documents/`. These cover the full 4-stage algorithm, not just one stage:
-- `TreyMartin_UC_Visual.drawio` — overall algorithm overview
+Drawio flowchart diagrams live in `design_documents/`:
+- `TreyMartin_UC_Visual.drawio` — overall algorithm overview (original 4-stage architecture)
 - `TreyMartin_Stage_1_GA_ver_1.drawio` — Stage 1 GA flowchart
 - `TreyMartin_Stage_2_GraphBuilder_ver_1.drawio` — Stage 2 graph builder flowchart
+- `GA_v2_InitialPopulation_Reqs.txt` — written requirements for GA v2 initial population generation
 
 ---
 
