@@ -17,6 +17,8 @@ import re
 
 import numpy as np
 
+from ..stage2_ga.unit_state import FleetState
+
 
 def classify_renewables(
     renewable_gens: dict,
@@ -44,15 +46,13 @@ def classify_renewables(
     return hydro_fixed, variable_ren
 
 
-def renewable_expected(variable_ren: dict, t: int) -> float:
-    """Midpoint of [pmin[t], pmax[t]] summed over variable renewables."""
+def renewable_contribution(variable_ren: dict, t: int, fraction: float = 1.0) -> float:
+    """Expected renewable contribution: fraction * pmax[t] summed over variable renewables."""
     total = 0.0
     for gen in variable_ren.values():
-        pmin_s = gen.get("power_output_minimum", [])
         pmax_s = gen.get("power_output_maximum", [])
-        lo = float(pmin_s[t]) if t < len(pmin_s) else 0.0
         hi = float(pmax_s[t]) if t < len(pmax_s) else 0.0
-        total += (lo + hi) / 2.0
+        total += hi * fraction
     return total
 
 
@@ -62,6 +62,7 @@ def generate_cut_candidate(
     generators: dict,
     thermal_demand_target: float,
     rng: np.random.Generator,
+    fleet_state: FleetState | None = None,
 ) -> set[str]:
     """
     Generate one candidate committed thermal set via random cutting.
@@ -71,34 +72,45 @@ def generate_cut_candidate(
     free_units            : thermal units eligible for cutting (not constrained).
     constrained_on        : thermal units that must remain ON.
     generators            : full thermal generator dict from instance JSON.
-    thermal_demand_target : MW threshold — stop cutting when sum(pmax) would
-                            fall below this value.
+    thermal_demand_target : MW threshold — stop cutting when sum(effective pmax)
+                            would fall below this value.
     rng                   : NumPy random Generator.
+    fleet_state           : Current fleet state.  When provided, each unit's
+                            contribution to the pmax sum is ramp-adjusted:
+                              - was ON : min(pmax, prev_dispatch + ramp_up_limit)
+                              - was OFF : min(pmax, ramp_startup_limit)
+                            Defaults to static pmax when None (e.g., testing).
 
     Returns
     -------
     Set of committed thermal unit names (survivors ∪ constrained_on).
     """
     pool = list(free_units)
-    rng.shuffle(pool)  # random cut order
+    rng.shuffle(pool)
 
     committed_free: set[str] = set(pool)
 
+    def _eff_pmax(name: str) -> float:
+        gen  = generators[name]
+        pmax = float(gen.get("power_output_maximum", 0.0))
+        if fleet_state is None:
+            return pmax
+        pmin  = float(gen.get("power_output_minimum", 0.0))
+        state = fleet_state[name]
+        if state.committed:
+            ramp_up = float(gen.get("ramp_up_limit", pmax - pmin))
+            return min(pmax, state.dispatch + ramp_up)
+        else:
+            su_ramp = float(gen.get("ramp_startup_limit", pmax))
+            return min(pmax, su_ramp)
+
     def _sum_pmax(committed_free_set: set[str]) -> float:
-        thermal_pmax = sum(
-            float(generators[n]["piecewise_production"][-1]["mw"])
-            for n in committed_free_set
-        )
-        constrained_pmax = sum(
-            float(generators[n]["piecewise_production"][-1]["mw"])
-            for n in constrained_on
-        )
-        return thermal_pmax + constrained_pmax
+        return sum(_eff_pmax(n) for n in committed_free_set | constrained_on)
 
     for unit in pool:
         committed_free.discard(unit)
         if _sum_pmax(committed_free) < thermal_demand_target - 1e-6:
-            committed_free.add(unit)  # restore — this cut would violate pmax
+            committed_free.add(unit)  # restore — this cut would violate capacity
             break
 
     return committed_free | constrained_on

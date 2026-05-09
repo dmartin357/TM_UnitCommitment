@@ -30,7 +30,7 @@ from ..stage2_ga.unit_state import (
 from .candidate import ForwardSolution, PeriodCandidate
 from .config import GAv2Config
 from .constraint_check import classify_thermal_units
-from .cutting import classify_renewables, generate_cut_candidate, renewable_expected
+from .cutting import classify_renewables, generate_cut_candidate, renewable_contribution
 from .ed_single_period import solve_ed_with_renewables
 from .scoring import select_winner
 
@@ -48,8 +48,8 @@ def _compute_ramp_bounds(
     for name in committed_names:
         gen   = generators[name]
         state = fleet_state[name]
-        pmin  = float(gen["piecewise_production"][0]["mw"])
-        pmax  = float(gen["piecewise_production"][-1]["mw"])
+        pmin  = float(gen.get("power_output_minimum", 0.0))
+        pmax  = float(gen.get("power_output_maximum", 0.0))
 
         if state.committed:
             ramp_up   = float(gen.get("ramp_up_limit",   pmax - pmin))
@@ -210,8 +210,9 @@ def build_forward_solution(
         hydro_total     = sum(hydro_fixed.values())
         effective_demand = total_demand[t] - hydro_total
 
-        ren_exp = renewable_expected(variable_ren, t)
-        thermal_demand_target = effective_demand - ren_exp
+        ren_contr = renewable_contribution(variable_ren, t, config.renewable_fraction)
+        reg_up_req = total_demand[t] * config.reg_up_req_fraction
+        thermal_demand_target = max(max(effective_demand - ren_contr, 0.0), reg_up_req)
 
         constrained_on, _constrained_off, free = classify_thermal_units(
             fleet_state, generators
@@ -228,6 +229,7 @@ def build_forward_solution(
                 generators=generators,
                 thermal_demand_target=thermal_demand_target,
                 rng=rng,
+                fleet_state=fleet_state,
             )
 
             result = _evaluate_candidate(

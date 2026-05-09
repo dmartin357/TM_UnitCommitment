@@ -36,7 +36,8 @@ sys.path.insert(0, str(Path(__file__).parent.parent))
 
 from src.io.xlsx_export import (
     classify_fuel,
-    compute_reg_per_period,
+    compute_all_reserves_per_period,
+    compute_dispatch_cost_per_period,
     export_solution_xlsx,
 )
 
@@ -164,6 +165,61 @@ def _parse_cbc_renewable_dispatch(
     return renewable_dispatch, used_actual
 
 
+# ── Startup cost ─────────────────────────────────────────────────────────────
+
+def _compute_startup_cost_per_period(
+    sol: dict,
+    thermal_gens: dict,
+    n_periods: int,
+) -> list[float]:
+    """
+    Compute startup cost per period from CBC vg (startup indicator).
+
+    For each vg[g,t] == 1 event, traces ug backwards to find the offline
+    duration, then applies the generator's startup cost tier logic (same
+    as the heuristic's _startup_cost):
+      - tier with the highest lag <= offline_duration wins.
+      - For startups at t=1, time_down_t0 from the instance is included.
+    """
+    vg_data = sol.get("vg", {})
+    ug_data = sol.get("ug", {})
+    startup_cost = [0.0] * n_periods
+
+    for name, gen in thermal_gens.items():
+        tiers = gen.get("startup", [])
+        if not tiers:
+            continue
+        for t_display in range(1, n_periods + 1):
+            t_idx = t_display - 1
+            vg_v = vg_data.get(f"{name},{t_display}", 0.0)
+            if round(float(vg_v)) < 1:
+                continue
+
+            # Count consecutive OFF periods immediately before this startup
+            offline_periods = 0
+            for t_back in range(t_display - 1, 0, -1):
+                ug_back = ug_data.get(f"{name},{t_back}", None)
+                if ug_back is not None and round(float(ug_back)) < 1:
+                    offline_periods += 1
+                else:
+                    break
+
+            # If we traced all the way back to t=0, add the t0 offline count
+            if offline_periods == t_display - 1 and int(gen.get("unit_on_t0", 0)) == 0:
+                offline_periods += int(gen.get("time_down_t0", 0))
+
+            # Pick the most expensive qualifying tier
+            cost = float(tiers[0]["cost"])
+            for tier in tiers:
+                if offline_periods >= int(tier["lag"]):
+                    cost = float(tier["cost"])
+                else:
+                    break
+            startup_cost[t_idx] += cost
+
+    return startup_cost
+
+
 # ── Main ──────────────────────────────────────────────────────────────────────
 
 def main() -> None:
@@ -207,15 +263,28 @@ def main() -> None:
         print("Renewable dispatch: pw not found in JSON — using pmax approximation.")
         print("  Re-run uc_model.py to capture exact renewable dispatch.\n")
 
-    # Regulation
-    reg_up, reg_down = compute_reg_per_period(
+    # All reserve categories
+    reserves = compute_all_reserves_per_period(
         generators=thermal_gens,
         thermal_dispatch=thermal_dispatch,
         committed_per_period=committed_per_period,
         n_periods=n_periods,
     )
 
-    print("Writing xlsx…")
+    # ED cost per period (from piecewise_production interpolation)
+    ed_cost = compute_dispatch_cost_per_period(
+        generators=thermal_gens,
+        thermal_dispatch=thermal_dispatch,
+        n_periods=n_periods,
+    )
+
+    # Startup cost per period (from CBC vg startup indicator + instance tiers)
+    startup_cost = _compute_startup_cost_per_period(sol, thermal_gens, n_periods)
+    total_su = sum(startup_cost)
+    n_events  = sum(1 for v in startup_cost if v > 0)
+    print(f"Startup costs: {n_events} startup events, total ${total_su:,.2f}")
+
+    print("Writing xlsx...")
     output = export_solution_xlsx(
         path=OUTPUT_XLSX,
         generators_thermal=thermal_gens,
@@ -228,12 +297,18 @@ def main() -> None:
         renewable_min_vals=ren_min,
         renewable_max_vals=ren_max_eff,
         committed_thermal=committed_counts,
-        reg_up_total=reg_up,
-        reg_down_total=reg_down,
+        reg_up_total=reserves["reg_up"],
+        reg_down_total=reserves["reg_down"],
+        spin_up_total=reserves["spin_up"],
+        spin_down_total=reserves["spin_down"],
+        flex_up_total=reserves["flex_up"],
+        flex_down_total=reserves["flex_down"],
+        ed_cost_per_period=ed_cost,
+        startup_cost_per_period=startup_cost,
         period_labels=[f"t={t}" for t in range(1, n_periods + 1)],
         sheet_title=f"CBC Benchmark  obj=${obj:,.0f}" if obj else "CBC Benchmark",
     )
-    print(f"Saved → {output}")
+    print(f"Saved -> {output}")
 
 
 if __name__ == "__main__":

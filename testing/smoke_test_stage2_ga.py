@@ -22,7 +22,7 @@ import numpy as np
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
 from src.io.stage1_io import load_stage1_result
-from src.io.xlsx_export import classify_fuel, compute_reg_per_period, export_solution_xlsx
+from src.io.xlsx_export import classify_fuel, compute_all_reserves_per_period, export_solution_xlsx
 from src.pre_solve_stage.smoothing import smooth_targets
 from src.stage2_ga.forward_pass import run_stage2_forward_pass
 from testing.control_panel import CURRENT
@@ -206,8 +206,8 @@ def _export_heuristic_xlsx(result, inst: InstanceData, path: Path) -> None:
             row.append(hi if is_hydro else (lo + hi) / 2.0)
         renewable_dispatch[name] = row
 
-    # ── Regulation per period ─────────────────────────────────────────────────
-    reg_up, reg_down = compute_reg_per_period(
+    # ── All reserve categories per period ─────────────────────────────────────
+    reserves = compute_all_reserves_per_period(
         generators=thermal_gens,
         thermal_dispatch=thermal_dispatch,
         committed_per_period=committed_per_period,
@@ -226,8 +226,14 @@ def _export_heuristic_xlsx(result, inst: InstanceData, path: Path) -> None:
         renewable_min_vals=inst.renewable_min[:n_periods],
         renewable_max_vals=inst.renewable_max[:n_periods],
         committed_thermal=committed_counts,
-        reg_up_total=reg_up,
-        reg_down_total=reg_down,
+        reg_up_total=reserves["reg_up"],
+        reg_down_total=reserves["reg_down"],
+        spin_up_total=reserves["spin_up"],
+        spin_down_total=reserves["spin_down"],
+        flex_up_total=reserves["flex_up"],
+        flex_down_total=reserves["flex_down"],
+        ramp_up_total=reserves["ramp_up"],
+        ramp_down_total=reserves["ramp_down"],
         period_labels=[f"t={t}" for t in range(n_periods)],
         sheet_title="Heuristic",
     )

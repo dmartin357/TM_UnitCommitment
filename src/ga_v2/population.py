@@ -18,7 +18,7 @@ from ..stage2_ga.unit_state import fleet_state_from_t0
 from .candidate import ForwardSolution
 from .config import GAv2Config
 from .constraint_check import classify_thermal_units
-from .cutting import classify_renewables, generate_cut_candidate, renewable_expected
+from .cutting import classify_renewables, generate_cut_candidate, renewable_contribution
 from .forward_pass import build_forward_solution
 
 
@@ -59,13 +59,14 @@ def generate_initial_population(
     t1 = 1
     hydro_fixed, variable_ren = classify_renewables(renewable_gens, t1)
     hydro_total    = sum(hydro_fixed.values())
-    ren_exp        = renewable_expected(variable_ren, t1)
-    th_demand_t1   = total_demand[t1] - hydro_total - ren_exp
+    ren_contr    = renewable_contribution(variable_ren, t1, config.renewable_fraction)
+    reg_up_req   = total_demand[t1] * config.reg_up_req_fraction
+    th_demand_t1 = max(max(total_demand[t1] - hydro_total - ren_contr, 0.0), reg_up_req)
 
     print(
         f"  Thermal demand target at t=1: {th_demand_t1:,.1f} MW  "
         f"(demand={total_demand[t1]:,.1f}  hydro={hydro_total:,.1f}  "
-        f"ren_exp={ren_exp:,.1f})"
+        f"ren_contr={ren_contr:,.1f}  reg_up_floor={reg_up_req:,.1f})"
     )
     print(
         f"  Constraint buckets at t=1:  "
@@ -75,7 +76,7 @@ def generate_initial_population(
     )
 
     # ── Generate n_population t=1 candidates ──────────────────────────────────
-    print(f"\n  Generating {config.n_population} t=1 candidates via cutting…")
+    print(f"\n  Generating {config.n_population} t=1 candidates via cutting...")
     t1_candidates: list[set[str]] = []
     for _ in range(config.n_population):
         committed = generate_cut_candidate(
@@ -84,6 +85,7 @@ def generate_initial_population(
             generators=generators,
             thermal_demand_target=th_demand_t1,
             rng=rng,
+            fleet_state=fleet_state_t0,
         )
         t1_candidates.append(committed)
 

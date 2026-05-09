@@ -49,6 +49,7 @@ from pathlib import Path
 # Allow importing from repo root when running smoke tests directly
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
+from src.ga_v2.config import GAv2Config
 from src.pre_solve_stage.config import PreSolveConfig
 from src.stage1_ga.config import GAConfig
 from src.stage2_ga.config import Stage2Config
@@ -165,6 +166,9 @@ class ExperimentConfig:
     stage2_graph:      GraphBuilderConfig = field(default_factory=GraphBuilderConfig)
     stage2_graph_mode: str                = "load_or_run"
 
+    # ── GA v2 (active development path) ──────────────────────────────────────
+    ga_v2: GAv2Config = field(default_factory=GAv2Config)
+
     # ── Global random seed ────────────────────────────────────────────────────
     # Used as the base seed for Stage 1 (period t → seed + t) and the fixed
     # seed for Stage 2 GA.  Override stage2_ga.rng_seed separately if you want
@@ -238,6 +242,24 @@ CURRENT = ExperimentConfig(
         net_adjustment_tolerance=0.05,
     ),
     stage2_graph_mode="load_or_run",
+
+    # ── GA v2 ─────────────────────────────────────────────────────────────────
+    ga_v2=GAv2Config(
+        n_population=10,
+        n_candidates_per_period=8,
+        economics_weight=0.5,
+        regulation_weight=0.5,
+        solver="auto",
+        renewable_cost_per_mwh=0.01,
+        # Fraction of renewable pmax assumed available when computing thermal
+        # demand target.  1.0 = full forecast (matches CBC dispatch); lower
+        # values are more conservative (commit more thermal).
+        renewable_fraction=1.0,
+        # Minimum reg-up reserve as fraction of total demand — floor prevents
+        # over-cutting thermal even when renewables cover demand entirely.
+        reg_up_req_fraction=0.05,
+        rng_seed=42,
+    ),
 
     # ── Global random seed ────────────────────────────────────────────────────
     rng_seed=42,

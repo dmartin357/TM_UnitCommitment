@@ -19,9 +19,8 @@ import numpy as np
 
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
-from src.ga_v2.config import GAv2Config
 from src.ga_v2.population import generate_initial_population
-from src.io.xlsx_export import compute_reg_per_period, export_solution_xlsx
+from src.io.xlsx_export import compute_all_reserves_per_period, compute_dispatch_cost_per_period, export_solution_xlsx
 from testing.control_panel import CURRENT
 
 # ── Logging ───────────────────────────────────────────────────────────────────
@@ -42,16 +41,6 @@ _root.addHandler(_console_handler)
 INSTANCE_PATH = CURRENT.instance_path
 RESULTS_DIR   = Path(__file__).parent / "results"
 
-# ── GA v2 config ──────────────────────────────────────────────────────────────
-GA_V2_CONFIG = GAv2Config(
-    n_population=10,
-    n_candidates_per_period=8,
-    economics_weight=0.5,
-    regulation_weight=0.5,
-    solver="auto",
-    renewable_cost_per_mwh=0.01,
-    rng_seed=CURRENT.rng_seed,
-)
 
 # ── Instance loader ───────────────────────────────────────────────────────────
 
@@ -70,7 +59,7 @@ def compute_total_demand(data: dict) -> list[float]:
 
 # ── Excel export ──────────────────────────────────────────────────────────────
 
-def export_solution(solution, thermal_gens, renewable_gens, total_demand, n_periods: int, path: Path) -> None:
+def export_solution(solution, thermal_gens, renewable_gens, total_demand, n_periods: int, path: Path, sheet_title: str = "GA v2 Best") -> None:
     """Export the best ForwardSolution to the shared xlsx format."""
 
     dispatch_by_period = {d.period: d for d in solution.decisions}
@@ -134,12 +123,17 @@ def export_solution(solution, thermal_gens, renewable_gens, total_demand, n_peri
     ]
     committed_counts = [len(c) for c in committed_per_period]
 
-    reg_up, reg_down = compute_reg_per_period(
+    reserves = compute_all_reserves_per_period(
         generators=thermal_gens,
         thermal_dispatch=thermal_dispatch,
         committed_per_period=committed_per_period,
         n_periods=n_periods,
     )
+
+    # Per-period costs from the ForwardSolution decisions
+    dispatch_by_period = {d.period: d for d in solution.decisions}
+    ed_costs      = [0.0] + [dispatch_by_period[t].thermal_cost if t in dispatch_by_period else 0.0 for t in range(1, n_periods)]
+    startup_costs = [0.0] + [dispatch_by_period[t].startup_cost if t in dispatch_by_period else 0.0 for t in range(1, n_periods)]
 
     export_solution_xlsx(
         path=path,
@@ -153,12 +147,20 @@ def export_solution(solution, thermal_gens, renewable_gens, total_demand, n_peri
         renewable_min_vals=ren_min_vals,
         renewable_max_vals=ren_max_vals,
         committed_thermal=committed_counts,
-        reg_up_total=reg_up,
-        reg_down_total=reg_down,
+        reg_up_total=reserves["reg_up"],
+        reg_down_total=reserves["reg_down"],
+        spin_up_total=reserves["spin_up"],
+        spin_down_total=reserves["spin_down"],
+        flex_up_total=reserves["flex_up"],
+        flex_down_total=reserves["flex_down"],
+        ramp_up_total=reserves["ramp_up"],
+        ramp_down_total=reserves["ramp_down"],
+        ed_cost_per_period=ed_costs,
+        startup_cost_per_period=startup_costs,
         period_labels=[f"t={t}" for t in range(n_periods)],
-        sheet_title="GA v2 Best",
+        sheet_title=sheet_title,
     )
-    print(f"  Best solution xlsx → {path}\n")
+    print(f"  Best solution xlsx -> {path}\n")
 
 
 # ── Main ──────────────────────────────────────────────────────────────────────
@@ -178,13 +180,13 @@ def main() -> None:
         flush=True,
     )
 
-    rng = np.random.default_rng(GA_V2_CONFIG.rng_seed)
+    rng = np.random.default_rng(CURRENT.ga_v2.rng_seed)
 
     print(
-        f"GA v2 config:  population={GA_V2_CONFIG.n_population}  "
-        f"candidates/period={GA_V2_CONFIG.n_candidates_per_period}  "
-        f"econ_weight={GA_V2_CONFIG.economics_weight}  "
-        f"reg_weight={GA_V2_CONFIG.regulation_weight}\n",
+        f"GA v2 config:  population={CURRENT.ga_v2.n_population}  "
+        f"candidates/period={CURRENT.ga_v2.n_candidates_per_period}  "
+        f"econ_weight={CURRENT.ga_v2.economics_weight}  "
+        f"reg_weight={CURRENT.ga_v2.regulation_weight}\n",
         flush=True,
     )
 
@@ -193,12 +195,12 @@ def main() -> None:
         renewable_gens=renewable_gens,
         total_demand=total_demand,
         n_periods=n_periods,
-        config=GA_V2_CONFIG,
+        config=CURRENT.ga_v2,
         rng=rng,
     )
 
     # ── Print all solution summaries ──────────────────────────────────────────
-    print("\n\n── Per-solution summaries ──────────────────────────────────────\n")
+    print("\n\n-- Per-solution summaries ----------------------------------------------\n")
     for i, sol in enumerate(population):
         complete = sol.is_complete(n_periods)
         label = f"Solution {i+1}/{len(population)}  ({sol.periods_solved}/{n_periods-1} periods solved)"
@@ -220,7 +222,10 @@ def main() -> None:
     else:
         best = min(complete_solutions, key=lambda s: s.total_cost)
     xlsx_path = RESULTS_DIR / f"ga_v2_best_{INSTANCE_PATH.stem}.xlsx"
-    export_solution(best, thermal_gens, renewable_gens, total_demand, n_periods, xlsx_path)
+    export_solution(
+        best, thermal_gens, renewable_gens, total_demand, n_periods, xlsx_path,
+        sheet_title=f"GA v2 Best  obj=${best.total_cost:,.0f}",
+    )
 
 
 if __name__ == "__main__":
@@ -231,6 +236,6 @@ if __name__ == "__main__":
     _fh.setLevel(logging.DEBUG)
     _fh.setFormatter(_formatter)
     logging.getLogger().addHandler(_fh)
-    print(f"  Detailed log → {_log_path}\n")
+    print(f"  Detailed log -> {_log_path}\n")
 
     main()
